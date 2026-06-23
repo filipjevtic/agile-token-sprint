@@ -8,7 +8,13 @@ test("integration logos and sync forms are visible", async ({ page }) => {
     await expect(page.getByRole("heading", { name })).toBeVisible();
   }
 
+  // GitHub is expanded by default.
   await expect(page.getByRole("button", { name: "Sync from GitHub" })).toBeVisible();
+
+  // Expand Jira and GitLab accordion sections.
+  await page.getByRole("heading", { name: "Jira" }).click();
+  await page.getByRole("heading", { name: "GitLab" }).click();
+
   await expect(page.getByRole("button", { name: "Sync from Jira" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sync from GitLab" })).toBeVisible();
   await expect(page.getByLabel("Jira base URL")).toBeVisible();
