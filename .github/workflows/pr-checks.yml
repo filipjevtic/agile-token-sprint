@@ -62,9 +62,18 @@ jobs:
         env:
           DATABASE_URL: postgresql://ats:ats@localhost:5432/ats
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-playwright-
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/web
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Run E2E tests
         run: npm run e2e --workspace=apps/web
