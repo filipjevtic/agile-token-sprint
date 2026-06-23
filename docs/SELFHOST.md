@@ -1,5 +1,9 @@
 # Self-Hosting Guide
 
+<p align="center">
+  <img src="../assets/logo-icon.png" alt="Burnwise" width="120">
+</p>
+
 This document explains how to run Burnwise on your own infrastructure.
 
 ## Prerequisites

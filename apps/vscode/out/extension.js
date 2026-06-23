@@ -40,7 +40,7 @@ let currentTicketId;
 let lastActivityStart = Date.now();
 let lastActiveFile;
 function getConfig() {
-    const cfg = vscode.workspace.getConfiguration("agileTokenSprint");
+    const cfg = vscode.workspace.getConfiguration("burnwise");
     return {
         serverUrl: cfg.get("serverUrl") || "http://localhost:3000",
         ingestApiKey: cfg.get("ingestApiKey") || "dev-key",
@@ -62,7 +62,7 @@ async function emitEvent(event) {
         });
     }
     catch (err) {
-        console.error("[Agile Token Sprint] Failed to emit event:", err);
+        console.error("[Burnwise] Failed to emit event:", err);
     }
 }
 function getGitContext() {
@@ -115,8 +115,8 @@ function emitSessionActivity(endTime, fileName) {
     lastActivityStart = endTime;
 }
 function activate(context) {
-    console.log("[Agile Token Sprint] Extension activated");
-    const setTicketCommand = vscode.commands.registerCommand("agileTokenSprint.setTicket", async () => {
+    console.log("[Burnwise] Extension activated");
+    const setTicketCommand = vscode.commands.registerCommand("burnwise.setTicket", async () => {
         const ticketId = await vscode.window.showInputBox({
             prompt: "Enter ticket ID (e.g., PROJ-123)",
             value: currentTicketId,
@@ -126,7 +126,7 @@ function activate(context) {
             vscode.window.showInformationMessage(`Current ticket: ${currentTicketId || "none"}`);
         }
     });
-    const statusCommand = vscode.commands.registerCommand("agileTokenSprint.getStatus", () => {
+    const statusCommand = vscode.commands.registerCommand("burnwise.getStatus", () => {
         vscode.window.showInformationMessage(`Current ticket: ${currentTicketId || "none"}`);
     });
     const onChangeActive = vscode.window.onDidChangeActiveTextEditor((editor) => {

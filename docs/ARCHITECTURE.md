@@ -1,5 +1,9 @@
 # Burnwise Architecture
 
+<p align="center">
+  <img src="../assets/logo-icon.png" alt="Burnwise" width="120">
+</p>
+
 This document describes the high-level architecture of the platform.
 
 ## System Overview

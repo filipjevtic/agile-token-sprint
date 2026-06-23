@@ -1,7 +1,22 @@
 import { runCommand } from "./run.js";
 import { parseArgs } from "./parse.js";
 
+function printBanner() {
+  console.log(`
+     )\ )         )          (
+    (()/(      ( /(          )\ )           )
+     /(_))  (  )\())  (     (()/(      (   (     (
+    (_))_   )\((_)\   )\     /(_))  (  )\  )\ )  )\ )
+    |   \  ((_) |(_) ((_)   (_))_|  )\((_) _(_/((()/( )
+    | |) |/ _ \\ \ / / _ \  | |_   ((_) _ | ' \)))(_))
+    |___/ \___/_\_\_\\___/  |___|  \__/__||_||_|(/__/
+
+    Burnwise CLI — turn AI usage into sprint-planning signal
+  `);
+}
+
 function printUsage() {
+  printBanner();
   console.log(`
 Usage: ats [options] -- <command> [args...]
 

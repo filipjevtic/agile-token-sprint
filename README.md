@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo-full.png" alt="Burnwise" width="320">
+</p>
+
 # Burnwise
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
