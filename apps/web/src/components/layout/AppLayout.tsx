@@ -1,6 +1,6 @@
 import * as React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Gauge, Plug, Settings, Sun, Moon, Monitor, Check, Menu, X, LogOut } from "lucide-react";
+import { LayoutDashboard, Gauge, Plug, Settings, Sun, Moon, Monitor, Menu, X, LogOut } from "lucide-react";
 import { Button } from "../ui/button.js";
 import { useTheme } from "../../hooks/use-theme.js";
 import { useAuth } from "../../context/auth.js";
@@ -49,20 +49,18 @@ export function AppLayout({
   children,
   projectId,
   onProjectChange,
+  projects = [],
 }: {
   children: React.ReactNode;
   projectId: string;
   onProjectChange: (value: string) => void;
+  projects?: Array<{ id: string; name: string }>;
+  onProjectsChange?: (value: string) => void;
 }) {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [draftProjectId, setDraftProjectId] = React.useState(projectId);
   const [mobileOpen, setMobileOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    setDraftProjectId(projectId);
-  }, [projectId]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -74,28 +72,20 @@ export function AppLayout({
           </div>
 
           <div className="border-b p-4">
-            <label htmlFor="projectId" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <label htmlFor="projectSelect" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Project
             </label>
-            <div className="mt-1 flex items-center gap-2">
-              <input
-                id="projectId"
-                value={draftProjectId}
-                onChange={(e) => setDraftProjectId(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onProjectChange(draftProjectId)}
-                placeholder="default"
-                className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8 shrink-0"
-                onClick={() => onProjectChange(draftProjectId)}
-                aria-label="Apply project"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
+            <select
+              id="projectSelect"
+              value={projectId}
+              onChange={(e) => onProjectChange(e.target.value)}
+              className="mt-1 flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+              {projects.length === 0 && <option value="">No projects</option>}
+            </select>
           </div>
 
           <nav className="flex-1 p-3 space-y-1">
@@ -172,28 +162,20 @@ export function AppLayout({
                 </div>
 
                 <div className="border-b p-4">
-                  <label htmlFor="projectId" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <label htmlFor="projectSelectMobile" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Project
                   </label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <input
-                      id="projectId"
-                      value={draftProjectId}
-                      onChange={(e) => setDraftProjectId(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && onProjectChange(draftProjectId)}
-                      placeholder="default"
-                      className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => onProjectChange(draftProjectId)}
-                      aria-label="Apply project"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <select
+                    id="projectSelectMobile"
+                    value={projectId}
+                    onChange={(e) => { onProjectChange(e.target.value); setMobileOpen(false); }}
+                    className="mt-1 flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                    {projects.length === 0 && <option value="">No projects</option>}
+                  </select>
                 </div>
 
                 <nav className="p-3 space-y-1">

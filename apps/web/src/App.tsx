@@ -1,22 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/auth.js";
 import { AppLayout } from "./components/layout/AppLayout.js";
 import { useProjectData } from "./hooks/use-project-data.js";
+import { useProjects } from "./hooks/use-projects.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
 import { ForecastPage } from "./pages/ForecastPage.js";
 import { IntegrationsPage } from "./pages/IntegrationsPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
 import { LoginPage } from "./pages/LoginPage.js";
 import { SetupPage } from "./pages/SetupPage.js";
+import { CreateProjectPage } from "./pages/CreateProjectPage.js";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAlerts } from "./hooks/use-alerts.js";
 import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.js";
 
 function AppRoutes() {
   const { user, loading, setupRequired } = useAuth();
-  const [projectId, setProjectId] = useState<string>("default");
+  const { projects, loading: projectsLoading, createProject, seedDemo } = useProjects();
+  const [projectId, setProjectId] = useState<string>("");
   const [alertRefresh, setAlertRefresh] = useState(0);
+
+  useEffect(() => {
+    if (projects.length > 0 && !projectId) {
+      setProjectId(projects[0].id);
+    }
+  }, [projects, projectId]);
+
   const data = useProjectData(projectId);
   const { alerts } = useAlerts(projectId, alertRefresh);
 
@@ -46,8 +56,25 @@ function AppRoutes() {
     );
   }
 
+  if (!projectsLoading && projects.length === 0) {
+    return (
+      <AppLayout projectId="" onProjectChange={() => {}} projects={[]} onProjectsChange={() => {}}>
+        <CreateProjectPage
+          onCreate={async (name) => {
+            const p = await createProject(name);
+            setProjectId(p.id);
+          }}
+          onLoadDemo={async () => {
+            const { projectId: id } = await seedDemo();
+            setProjectId(id);
+          }}
+        />
+      </AppLayout>
+    );
+  }
+
   return (
-    <AppLayout projectId={projectId} onProjectChange={setProjectId}>
+    <AppLayout projectId={projectId} onProjectChange={setProjectId} projects={projects} onProjectsChange={setProjectId}>
       {data.error && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
