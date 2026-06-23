@@ -27,8 +27,10 @@ export default async function globalSetup() {
   const setupRes = await ctx.get(`${API_URL}/api/v1/auth/setup-required`);
   const { setupRequired } = await setupRes.json();
 
+  let token: string;
+
   if (setupRequired) {
-    await ctx.post(`${API_URL}/api/v1/auth/setup`, {
+    const res = await ctx.post(`${API_URL}/api/v1/auth/setup`, {
       data: {
         email: E2E_EMAIL,
         password: E2E_PASSWORD,
@@ -36,17 +38,22 @@ export default async function globalSetup() {
         workspaceName: "E2E Workspace",
       },
     });
-    return;
+    const body = await res.json();
+    token = body.token;
+  } else {
+    const loginRes = await ctx.post(`${API_URL}/api/v1/auth/login`, {
+      data: { email: E2E_EMAIL, password: E2E_PASSWORD },
+    });
+    if (!loginRes.ok()) {
+      console.warn("E2E user login failed — tests requiring auth may fail.");
+      return;
+    }
+    const body = await loginRes.json();
+    token = body.token;
   }
 
-  // Setup already done — try logging in. If that fails, the user doesn't exist yet.
-  const loginRes = await ctx.post(`${API_URL}/api/v1/auth/login`, {
-    data: { email: E2E_EMAIL, password: E2E_PASSWORD },
+  // Seed demo data so tests have a project + sprint to work with.
+  await ctx.post(`${API_URL}/api/v1/admin/seed-demo`, {
+    headers: { Authorization: `Bearer ${token}` },
   });
-
-  if (!loginRes.ok()) {
-    // User doesn't exist — we can't create it without admin credentials here.
-    // The seed script should have created it, or a previous setup run did.
-    console.warn("E2E user login failed — tests requiring auth may fail.");
-  }
 }

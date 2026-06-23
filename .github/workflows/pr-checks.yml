@@ -57,11 +57,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://ats:ats@localhost:5432/ats
 
-      - name: Seed demo data
-        run: npm run db:seed --workspace=apps/server
-        env:
-          DATABASE_URL: postgresql://ats:ats@localhost:5432/ats
-
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
