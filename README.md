@@ -1,166 +1,115 @@
 ﻿# Burnwise
 
-[![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fagile--token--sprint-blue?logo=github)](https://github.com/filipjevtic/burnwise)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fburnwise-blue?logo=github)](https://github.com/filipjevtic/burnwise)
 
-Self-hosted, open-source platform that captures developer LLM token usage, traces, and other effort signals from IDEs, API proxies, and CLI tools, associates them with Jira / GitHub / GitLab tickets, and helps PMs build more realistic sprint plans.
+Self-hosted, open-source platform that turns AI usage into a first-class sprint-planning signal. Capture LLM tokens, traces, CI costs, and coding time from IDEs, API proxies, and CLI tools; associate them with Jira / GitHub / GitLab tickets; and forecast realistic workload, budget, and scope.
 
-## Goal
+![Dashboard Placeholder](https://via.placeholder.com/800x400?text=Burnwise+Dashboard+Screenshot)
 
-Turn AI usage into a first-class planning signal. Instead of guessing story points or hours, teams use actual ticket-level data to forecast workload, budget, and achievable sprint scope.
+## What Burnwise does
 
-## Status
+- [x] **Capture effort signals** from IDE plugins, API proxies, CLI wrappers, and CI/CD pipelines.
+- [x] **Associate events to tickets** by explicit ticket ID, prompt text, git branch, or commit message.
+- [x] **Sync issue trackers** — GitHub Issues, Jira, and GitLab Issues become sprints and tickets.
+- [x] **Forecast sprint capacity** from historical tokens, cost, and duration per story point.
+- [x] **Track budgets and alerts** for tokens, cost, and CI spend per project and sprint.
+- [x] **Manage teams and roles** — owner, admin, member, viewer.
+- [x] **Self-host in one command** with Docker Compose.
 
-M7 complete: budget alerts, real Jira/GitLab sync, team management, and CI/CD cost capture. M8 in progress: production polish and demo data.
-
-## Quick Start
+## Quick start
 
 ```bash
-# Install dependencies
+# 1. Clone the repo
+git clone https://github.com/filipjevtic/burnwise.git
+cd burnwise
+
+# 2. Install dependencies
 npm install --workspaces --include-workspace-root
 
-# Start the database and services
+# 3. Start the database and services
 docker compose up -d
 
-# Run migrations and seed demo data
+# 4. Run migrations and seed demo data
 npm run db:migrate --workspace=apps/server
 npm run db:seed --workspace=apps/server
 
-# Start the server, proxy, and web dashboard
+# 5. Start the server, proxy, and web dashboard
 npm run dev --workspace=apps/server
 npm run dev --workspace=apps/proxy
 npm run dev --workspace=apps/web
 ```
 
-See `SELFHOST.md` for detailed production deployment instructions.
+Open the dashboard at http://localhost:8080.
 
-## Environment Variables
-
-### Server (`apps/server`)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | `postgresql://ats:ats@localhost:5432/ats` | PostgreSQL connection string |
-| `PORT` | `3000` | HTTP port |
-| `INGEST_API_KEY` | `dev-key` | API key for event ingestion |
-
-### Proxy (`apps/proxy`)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SERVER_URL` | `http://localhost:3000` | URL of the Burnwise server |
-| `INGEST_API_KEY` | `dev-key` | Must match server `INGEST_API_KEY` |
-| `UPSTREAM_URL` | `https://api.openai.com` | Target LLM provider URL |
-| `PROVIDER` | `openai` | Provider name for events |
-| `WORKSPACE_ID` | `default` | Default workspace for events |
-| `PROJECT_ID` | `default` | Default project for events |
-| `USER_ID` | `default` | Default user for events |
-
-### Web (`apps/web`)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VITE_API_URL` | `http://localhost:3000` | Server URL for API calls |
-
-## Collectors
-
-### CLI (`apps/cli`)
-
-Wrap any command to emit a `session.activity` event.
-
-```bash
-# From the workspace root
-npm run build --workspace=@burnwise/cli
-node apps/cli/dist/index.js --ticket-id PROJ-123 --activity-type coding -- npm test
-
-# Or install globally
-npm link apps/cli
-ats --ticket-id PROJ-123 -- claude code "refactor login"
-```
-
-### VS Code Extension (`apps/vscode`)
-
-Open the `apps/vscode` folder in VS Code and press F5 to run the extension in a new window.
-
-Commands:
-- `Burnwise: Set Current Ticket` â€” associate subsequent activity with a ticket.
-- `Burnwise: Show Status` â€” show the current ticket.
-
-### MCP Server (`apps/mcp`)
-
-An MCP server exposing tools for Claude Code and other MCP clients:
-- `set_ticket` â€” set the current ticket ID.
-- `get_ticket` â€” read the current ticket ID.
-- `emit_session_activity` â€” emit a `session.activity` event.
-
-Add to your Claude Code or MCP config:
-
-```json
-{
-  "mcpServers": {
-    "burnwise": {
-      "command": "node",
-      "args": ["C:/Users/filip/CascadeProjects/burnwise/apps/mcp/dist/index.js"]
-    }
-  }
-}
-```
-
-## API Endpoints
-
-- `POST /api/v1/events/ingest` â€” Ingest usage events.
-- `GET /api/v1/events/by-ticket/:ticketId` â€” List events for a ticket.
-- `GET /api/v1/events/by-project/:projectId` â€” List events for a project.
-- `GET /api/v1/tickets/project/:projectId` â€” List tickets in a project.
-- `GET /api/v1/tickets/summary/:ticketId` â€” Get token/cost summary for a ticket.
-- `GET /api/v1/sprints/project/:projectId` â€” List sprints in a project.
-- `GET /api/v1/sprints/summary/:sprintId` â€” Get sprint token/cost summary.
-- `POST /api/v1/integrations/github/:projectId` â€” Sync GitHub issues & milestones.
-- `POST /api/v1/integrations/jira/:projectId` â€” Sync Jira issues & sprints.
-- `POST /api/v1/integrations/gitlab/:projectId` â€” Sync GitLab issues & milestones.
-- `GET /api/v1/forecast/project/:projectId` â€” Get historical capacity baseline.
-- `POST /api/v1/forecast/project/:projectId` â€” Forecast recommended budget for a target.
-- `PUT /api/v1/projects/:projectId` â€” Update project token/cost budgets and alert thresholds.
-- `PUT /api/v1/projects/sprint/:sprintId` â€” Update sprint token/cost budgets and alert thresholds.
-- `GET /api/v1/alerts/project/:projectId` â€” Get active budget alerts for a project.
-- `GET /api/v1/alerts/sprint/:sprintId` â€” Get active budget alerts for a sprint.
-- `GET /api/v1/team/:projectId` â€” List project team members.
-- `POST /api/v1/team/:projectId` â€” Add or upsert a team member.
-- `PUT /api/v1/team/:projectId/:userId` â€” Update a team member's role.
-- `DELETE /api/v1/team/:projectId/:userId` â€” Remove a team member.
-- `POST /api/v1/ci/webhook/:projectId` â€” Ingest CI/CD run events (GitHub Actions, GitLab CI, or generic).
-- `GET /api/v1/ci/summary/:projectId` â€” Get aggregate CI/CD cost and duration.
+For production deployment, see [docs/SELFHOST.md](docs/SELFHOST.md).
 
 ## Architecture
 
-See `ARCHITECTURE.md` for diagrams and a detailed system overview.
+Burnwise is a monorepo of focused apps and packages.
 
-- **Collectors** â€” IDE plugins, API proxy, and CLI hooks emit usage events.
-- **Ingestion API** â€” Accepts events, validates them, and persists them.
-- **Association service** â€” Links events to tickets using git context, prompt metadata, or manual rules.
-- **Aggregation database** â€” PostgreSQL for relational data and time-series metrics.
-- **Web dashboard** â€” React frontend for PMs and developers.
+```mermaid
+flowchart TB
+    subgraph Collectors
+        A[IDE plugins]
+        B[API proxy]
+        C[CLI]
+        D[CI/CD webhooks]
+    end
 
-## UI/UX
+    subgraph Server["apps/server Fastify API"]
+        E[Events /ingest]
+        F[Association service]
+        G[Integrations GitHub/Jira/GitLab]
+        H[Forecast]
+        I[Alerts]
+        J[Team]
+        K[CI/CD]
+    end
 
-The dashboard (`apps/web`) uses:
+    subgraph Frontend["apps/web React Dashboard"]
+        L[Dashboard]
+        M[Forecast & CI]
+        N[Integrations]
+        O[Settings & Team]
+    end
 
-- **Tailwind CSS** for styling
-- **shadcn/ui** design system primitives
-- **Lucide** icons
-- **React Router** for navigation
-- **Dark mode** toggle with system preference detection
+    subgraph Data
+        P[(PostgreSQL)]
+    end
 
-Integration logos are stored in `apps/web/public/logos/`.
+    A --> E
+    B --> E
+    C --> E
+    D --> K
+    E --> F
+    F --> P
+    G --> P
+    H --> P
+    I --> P
+    J --> P
+    K --> P
+    P --> L
+    P --> M
+    P --> N
+    P --> O
+```
 
-## Signals
+For detailed diagrams and data model, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-The platform captures multiple signals to estimate ticket effort:
+## Repository layout
 
-- LLM tokens, cost, and latency
-- Agent traces (Claude Trace, LangChain, etc.)
-- Wall-clock coding time
-- CI/CD costs
-- Git activity
+| Path | Purpose |
+|------|---------|
+| `apps/web` | React dashboard (Tailwind + shadcn/ui) |
+| `apps/server` | Fastify REST API, Prisma, integrations |
+| `apps/proxy` | OpenAI-compatible API proxy that emits events |
+| `apps/cli` | Wrap commands and emit `session.activity` events |
+| `apps/vscode` | VS Code extension collector |
+| `apps/mcp` | MCP server for Claude Code and other MCP clients |
+| `packages/schema` | Zod event schemas shared across apps |
+| `docs/` | Architecture and self-hosting documentation |
+| `docker-compose.yml` | One-command local stack |
 
 ## Development
 
@@ -174,28 +123,21 @@ npm run build --workspaces
 # Run unit tests
 npm run test --workspace=packages/schema
 
-# Run E2E tests (starts server and dashboard automatically, excludes visual regression)
+# Run E2E tests
 npm run e2e --workspace=apps/web
 
-# Run E2E tests in UI mode
+# Run E2E in UI mode
 npm run e2e:ui --workspace=apps/web
-
-# Run visual regression tests
-npm run e2e:visual --workspace=apps/web
-
-# Update visual regression baselines (generated in CI, not committed)
-npm run e2e:update-snapshots --workspace=apps/web
 ```
+
+## Contributing
+
+We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Security
+
+To report a security vulnerability, please see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache 2.0 â€” see `LICENSE`.
-
-## Business Model
-
-This is a fully self-hosted open-source project. Optional revenue paths:
-
-- Commercial support and onboarding
-- Sponsored / paid features that remain open source
-- Future hosted offering only if the project grows beyond a one-person stage
-
+Apache 2.0 — see [LICENSE](LICENSE).

@@ -140,4 +140,4 @@ flowchart LR
     Proxy -->|events| Server
 ```
 
-See `SELFHOST.md` for detailed deployment instructions.
+See [SELFHOST.md](SELFHOST.md) for detailed deployment instructions.
