@@ -1,7 +1,7 @@
-services:
+﻿services:
   postgres:
     image: postgres:16-alpine
-    container_name: ats-postgres
+    container_name: burnwise-postgres
     environment:
       POSTGRES_USER: ats
       POSTGRES_PASSWORD: ats
@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
-    container_name: ats-server
+    container_name: burnwise-server
     environment:
       DATABASE_URL: postgresql://ats:ats@postgres:5432/ats
       PORT: 3000
@@ -35,7 +35,7 @@ services:
     build:
       context: .
       dockerfile: apps/proxy/Dockerfile
-    container_name: ats-proxy
+    container_name: burnwise-proxy
     environment:
       SERVER_URL: http://server:3000
       INGEST_API_KEY: ${INGEST_API_KEY:-dev-key}
@@ -49,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-    container_name: ats-web
+    container_name: burnwise-web
     environment:
       VITE_API_URL: http://localhost:3000
     ports:

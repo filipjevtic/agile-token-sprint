@@ -1,4 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+﻿import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
@@ -6,13 +6,13 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { config } from "./config.js";
 import { emitEvent } from "./events.js";
-import type { Event } from "@agile-token-sprint/schema";
+import type { Event } from "@burnwise/schema";
 
 let currentTicketId: string | undefined = process.env.ATS_TICKET_ID || undefined;
 
 const server = new Server(
   {
-    name: "agile-token-sprint",
+    name: "burnwise",
     version: "0.0.1",
   },
   {
@@ -136,7 +136,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Agile Token Sprint MCP server running on stdio");
+  console.error("Burnwise MCP server running on stdio");
 }
 
 main().catch((err) => {

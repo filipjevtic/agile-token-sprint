@@ -1,5 +1,5 @@
-{
-  "name": "@agile-token-sprint/server",
+﻿{
+  "name": "@burnwise/server",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "seed": "npm run db:seed"
   },
   "dependencies": {
-    "@agile-token-sprint/schema": "*",
+    "@burnwise/schema": "*",
     "@fastify/cors": "^9.0.0",
     "@prisma/client": "^5.15.0",
     "fastify": "^4.28.0",

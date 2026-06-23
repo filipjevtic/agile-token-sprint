@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import { type Event } from "@agile-token-sprint/schema";
+﻿import * as vscode from "vscode";
+import { type Event } from "@burnwise/schema";
 
 let currentTicketId: string | undefined;
 let lastActivityStart: number = Date.now();
@@ -14,7 +14,7 @@ interface Config {
 }
 
 function getConfig(): Config {
-  const cfg = vscode.workspace.getConfiguration("agileTokenSprint");
+  const cfg = vscode.workspace.getConfiguration("burnwise");
   return {
     serverUrl: cfg.get("serverUrl") || "http://localhost:3000",
     ingestApiKey: cfg.get("ingestApiKey") || "dev-key",
@@ -36,7 +36,7 @@ async function emitEvent(event: Event): Promise<void> {
       body: JSON.stringify({ events: [event] }),
     });
   } catch (err) {
-    console.error("[Agile Token Sprint] Failed to emit event:", err);
+    console.error("[Burnwise] Failed to emit event:", err);
   }
 }
 
@@ -91,9 +91,9 @@ function emitSessionActivity(endTime: number, fileName?: string): void {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  console.log("[Agile Token Sprint] Extension activated");
+  console.log("[Burnwise] Extension activated");
 
-  const setTicketCommand = vscode.commands.registerCommand("agileTokenSprint.setTicket", async () => {
+  const setTicketCommand = vscode.commands.registerCommand("burnwise.setTicket", async () => {
     const ticketId = await vscode.window.showInputBox({
       prompt: "Enter ticket ID (e.g., PROJ-123)",
       value: currentTicketId,
@@ -104,7 +104,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   });
 
-  const statusCommand = vscode.commands.registerCommand("agileTokenSprint.getStatus", () => {
+  const statusCommand = vscode.commands.registerCommand("burnwise.getStatus", () => {
     vscode.window.showInformationMessage(`Current ticket: ${currentTicketId || "none"}`);
   });
 

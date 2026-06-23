@@ -1,5 +1,5 @@
-{
-  "name": "@agile-token-sprint/mcp",
+﻿{
+  "name": "@burnwise/mcp",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "test": "node --test dist/**/*.test.js"
   },
   "dependencies": {
-    "@agile-token-sprint/schema": "*",
+    "@burnwise/schema": "*",
     "@modelcontextprotocol/sdk": "^0.5.0"
   },
   "devDependencies": {

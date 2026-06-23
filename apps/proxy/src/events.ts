@@ -1,5 +1,5 @@
-import { config } from "./config.js";
-import type { Event } from "@agile-token-sprint/schema";
+﻿import { config } from "./config.js";
+import type { Event } from "@burnwise/schema";
 
 interface EmitLlmEventsInput {
   requestId: string;

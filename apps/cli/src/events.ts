@@ -1,5 +1,5 @@
-import { config } from "./config.js";
-import type { Event } from "@agile-token-sprint/schema";
+﻿import { config } from "./config.js";
+import type { Event } from "@burnwise/schema";
 
 export async function emitEvent(event: Event): Promise<void> {
   const response = await fetch(`${config.serverUrl}/api/v1/events/ingest`, {

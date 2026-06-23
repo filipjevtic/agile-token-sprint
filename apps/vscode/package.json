@@ -1,10 +1,10 @@
-{
-  "name": "@agile-token-sprint/vscode",
-  "displayName": "Agile Token Sprint",
+﻿{
+  "name": "@burnwise/vscode",
+  "displayName": "Burnwise",
   "description": "Track token usage and effort signals tied to tickets.",
   "version": "0.0.1",
   "private": true,
-  "publisher": "agile-token-sprint",
+  "publisher": "burnwise",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -18,40 +18,40 @@
   "contributes": {
     "commands": [
       {
-        "command": "agileTokenSprint.setTicket",
+        "command": "burnwise.setTicket",
         "title": "Set Current Ticket",
-        "category": "Agile Token Sprint"
+        "category": "Burnwise"
       },
       {
-        "command": "agileTokenSprint.getStatus",
+        "command": "burnwise.getStatus",
         "title": "Show Status",
-        "category": "Agile Token Sprint"
+        "category": "Burnwise"
       }
     ],
     "configuration": {
-      "title": "Agile Token Sprint",
+      "title": "Burnwise",
       "properties": {
-        "agileTokenSprint.serverUrl": {
+        "burnwise.serverUrl": {
           "type": "string",
           "default": "http://localhost:3000",
           "description": "Server URL for event ingestion"
         },
-        "agileTokenSprint.ingestApiKey": {
+        "burnwise.ingestApiKey": {
           "type": "string",
           "default": "dev-key",
           "description": "API key for event ingestion"
         },
-        "agileTokenSprint.workspaceId": {
+        "burnwise.workspaceId": {
           "type": "string",
           "default": "default",
           "description": "Workspace ID"
         },
-        "agileTokenSprint.projectId": {
+        "burnwise.projectId": {
           "type": "string",
           "default": "default",
           "description": "Project ID"
         },
-        "agileTokenSprint.userId": {
+        "burnwise.userId": {
           "type": "string",
           "default": "default",
           "description": "User ID"
@@ -70,6 +70,6 @@
     "typescript": "^5.5.0"
   },
   "dependencies": {
-    "@agile-token-sprint/schema": "*"
+    "@burnwise/schema": "*"
   }
 }

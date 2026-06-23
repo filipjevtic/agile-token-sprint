@@ -1,9 +1,9 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 
 test.describe("smoke tests", () => {
   test("dashboard loads", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/Agile Token Sprint/);
+    await expect(page).toHaveTitle(/Burnwise/);
     await expect(page.getByText("Dashboard").first()).toBeVisible();
   });
 

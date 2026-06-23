@@ -1,8 +1,8 @@
-import { spawn } from "node:child_process";
+﻿import { spawn } from "node:child_process";
 import { config } from "./config.js";
 import { getGitContext } from "./git.js";
 import { emitEvent } from "./events.js";
-import type { Event } from "@agile-token-sprint/schema";
+import type { Event } from "@burnwise/schema";
 
 export interface RunCommandOptions {
   command: string;

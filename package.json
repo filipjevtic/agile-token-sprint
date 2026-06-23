@@ -1,5 +1,5 @@
-{
-  "name": "agile-token-sprint",
+﻿{
+  "name": "burnwise",
   "version": "0.0.1",
   "private": true,
   "description": "Self-hosted open-source platform that ties LLM token usage and traces to tickets for realistic sprint planning.",

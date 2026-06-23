@@ -1,6 +1,6 @@
-# Agile Token Sprint
+﻿# Burnwise
 
-[![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fagile--token--sprint-blue?logo=github)](https://github.com/filipjevtic/agile-token-sprint)
+[![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fagile--token--sprint-blue?logo=github)](https://github.com/filipjevtic/burnwise)
 
 Self-hosted, open-source platform that captures developer LLM token usage, traces, and other effort signals from IDEs, API proxies, and CLI tools, associates them with Jira / GitHub / GitLab tickets, and helps PMs build more realistic sprint plans.
 
@@ -47,7 +47,7 @@ See `SELFHOST.md` for detailed production deployment instructions.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SERVER_URL` | `http://localhost:3000` | URL of the Agile Token Sprint server |
+| `SERVER_URL` | `http://localhost:3000` | URL of the Burnwise server |
 | `INGEST_API_KEY` | `dev-key` | Must match server `INGEST_API_KEY` |
 | `UPSTREAM_URL` | `https://api.openai.com` | Target LLM provider URL |
 | `PROVIDER` | `openai` | Provider name for events |
@@ -69,7 +69,7 @@ Wrap any command to emit a `session.activity` event.
 
 ```bash
 # From the workspace root
-npm run build --workspace=@agile-token-sprint/cli
+npm run build --workspace=@burnwise/cli
 node apps/cli/dist/index.js --ticket-id PROJ-123 --activity-type coding -- npm test
 
 # Or install globally
@@ -82,24 +82,24 @@ ats --ticket-id PROJ-123 -- claude code "refactor login"
 Open the `apps/vscode` folder in VS Code and press F5 to run the extension in a new window.
 
 Commands:
-- `Agile Token Sprint: Set Current Ticket` — associate subsequent activity with a ticket.
-- `Agile Token Sprint: Show Status` — show the current ticket.
+- `Burnwise: Set Current Ticket` â€” associate subsequent activity with a ticket.
+- `Burnwise: Show Status` â€” show the current ticket.
 
 ### MCP Server (`apps/mcp`)
 
 An MCP server exposing tools for Claude Code and other MCP clients:
-- `set_ticket` — set the current ticket ID.
-- `get_ticket` — read the current ticket ID.
-- `emit_session_activity` — emit a `session.activity` event.
+- `set_ticket` â€” set the current ticket ID.
+- `get_ticket` â€” read the current ticket ID.
+- `emit_session_activity` â€” emit a `session.activity` event.
 
 Add to your Claude Code or MCP config:
 
 ```json
 {
   "mcpServers": {
-    "agile-token-sprint": {
+    "burnwise": {
       "command": "node",
-      "args": ["C:/Users/filip/CascadeProjects/agile-token-sprint/apps/mcp/dist/index.js"]
+      "args": ["C:/Users/filip/CascadeProjects/burnwise/apps/mcp/dist/index.js"]
     }
   }
 }
@@ -107,38 +107,38 @@ Add to your Claude Code or MCP config:
 
 ## API Endpoints
 
-- `POST /api/v1/events/ingest` — Ingest usage events.
-- `GET /api/v1/events/by-ticket/:ticketId` — List events for a ticket.
-- `GET /api/v1/events/by-project/:projectId` — List events for a project.
-- `GET /api/v1/tickets/project/:projectId` — List tickets in a project.
-- `GET /api/v1/tickets/summary/:ticketId` — Get token/cost summary for a ticket.
-- `GET /api/v1/sprints/project/:projectId` — List sprints in a project.
-- `GET /api/v1/sprints/summary/:sprintId` — Get sprint token/cost summary.
-- `POST /api/v1/integrations/github/:projectId` — Sync GitHub issues & milestones.
-- `POST /api/v1/integrations/jira/:projectId` — Sync Jira issues & sprints.
-- `POST /api/v1/integrations/gitlab/:projectId` — Sync GitLab issues & milestones.
-- `GET /api/v1/forecast/project/:projectId` — Get historical capacity baseline.
-- `POST /api/v1/forecast/project/:projectId` — Forecast recommended budget for a target.
-- `PUT /api/v1/projects/:projectId` — Update project token/cost budgets and alert thresholds.
-- `PUT /api/v1/projects/sprint/:sprintId` — Update sprint token/cost budgets and alert thresholds.
-- `GET /api/v1/alerts/project/:projectId` — Get active budget alerts for a project.
-- `GET /api/v1/alerts/sprint/:sprintId` — Get active budget alerts for a sprint.
-- `GET /api/v1/team/:projectId` — List project team members.
-- `POST /api/v1/team/:projectId` — Add or upsert a team member.
-- `PUT /api/v1/team/:projectId/:userId` — Update a team member's role.
-- `DELETE /api/v1/team/:projectId/:userId` — Remove a team member.
-- `POST /api/v1/ci/webhook/:projectId` — Ingest CI/CD run events (GitHub Actions, GitLab CI, or generic).
-- `GET /api/v1/ci/summary/:projectId` — Get aggregate CI/CD cost and duration.
+- `POST /api/v1/events/ingest` â€” Ingest usage events.
+- `GET /api/v1/events/by-ticket/:ticketId` â€” List events for a ticket.
+- `GET /api/v1/events/by-project/:projectId` â€” List events for a project.
+- `GET /api/v1/tickets/project/:projectId` â€” List tickets in a project.
+- `GET /api/v1/tickets/summary/:ticketId` â€” Get token/cost summary for a ticket.
+- `GET /api/v1/sprints/project/:projectId` â€” List sprints in a project.
+- `GET /api/v1/sprints/summary/:sprintId` â€” Get sprint token/cost summary.
+- `POST /api/v1/integrations/github/:projectId` â€” Sync GitHub issues & milestones.
+- `POST /api/v1/integrations/jira/:projectId` â€” Sync Jira issues & sprints.
+- `POST /api/v1/integrations/gitlab/:projectId` â€” Sync GitLab issues & milestones.
+- `GET /api/v1/forecast/project/:projectId` â€” Get historical capacity baseline.
+- `POST /api/v1/forecast/project/:projectId` â€” Forecast recommended budget for a target.
+- `PUT /api/v1/projects/:projectId` â€” Update project token/cost budgets and alert thresholds.
+- `PUT /api/v1/projects/sprint/:sprintId` â€” Update sprint token/cost budgets and alert thresholds.
+- `GET /api/v1/alerts/project/:projectId` â€” Get active budget alerts for a project.
+- `GET /api/v1/alerts/sprint/:sprintId` â€” Get active budget alerts for a sprint.
+- `GET /api/v1/team/:projectId` â€” List project team members.
+- `POST /api/v1/team/:projectId` â€” Add or upsert a team member.
+- `PUT /api/v1/team/:projectId/:userId` â€” Update a team member's role.
+- `DELETE /api/v1/team/:projectId/:userId` â€” Remove a team member.
+- `POST /api/v1/ci/webhook/:projectId` â€” Ingest CI/CD run events (GitHub Actions, GitLab CI, or generic).
+- `GET /api/v1/ci/summary/:projectId` â€” Get aggregate CI/CD cost and duration.
 
 ## Architecture
 
 See `ARCHITECTURE.md` for diagrams and a detailed system overview.
 
-- **Collectors** — IDE plugins, API proxy, and CLI hooks emit usage events.
-- **Ingestion API** — Accepts events, validates them, and persists them.
-- **Association service** — Links events to tickets using git context, prompt metadata, or manual rules.
-- **Aggregation database** — PostgreSQL for relational data and time-series metrics.
-- **Web dashboard** — React frontend for PMs and developers.
+- **Collectors** â€” IDE plugins, API proxy, and CLI hooks emit usage events.
+- **Ingestion API** â€” Accepts events, validates them, and persists them.
+- **Association service** â€” Links events to tickets using git context, prompt metadata, or manual rules.
+- **Aggregation database** â€” PostgreSQL for relational data and time-series metrics.
+- **Web dashboard** â€” React frontend for PMs and developers.
 
 ## UI/UX
 
@@ -189,7 +189,7 @@ npm run e2e:update-snapshots --workspace=apps/web
 
 ## License
 
-Apache 2.0 — see `LICENSE`.
+Apache 2.0 â€” see `LICENSE`.
 
 ## Business Model
 

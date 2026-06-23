@@ -1,5 +1,5 @@
-{
-  "name": "@agile-token-sprint/proxy",
+﻿{
+  "name": "@burnwise/proxy",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "test": "node --test dist/**/*.test.js"
   },
   "dependencies": {
-    "@agile-token-sprint/schema": "*",
+    "@burnwise/schema": "*",
     "fastify": "^4.28.0",
     "zod": "^3.23.8"
   },

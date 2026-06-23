@@ -1,5 +1,5 @@
-{
-  "name": "@agile-token-sprint/cli",
+﻿{
+  "name": "@burnwise/cli",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "test": "node --test dist/**/*.test.js"
   },
   "dependencies": {
-    "@agile-token-sprint/schema": "*"
+    "@burnwise/schema": "*"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

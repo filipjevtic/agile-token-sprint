@@ -1,6 +1,6 @@
-# Self-Hosting Guide
+﻿# Self-Hosting Guide
 
-This document explains how to run Agile Token Sprint on your own infrastructure.
+This document explains how to run Burnwise on your own infrastructure.
 
 ## Prerequisites
 
