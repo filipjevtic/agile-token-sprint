@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card.js";
+import { Card, CardContent, CardDescription, CardTitle } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { Input } from "../components/ui/input.js";
 import { Label } from "../components/ui/label.js";
@@ -50,6 +50,7 @@ export function IntegrationsPage({
 
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openIntegration, setOpenIntegration] = useState<string | null>("github");
 
   async function handleGitHubSync(e: React.FormEvent) {
     e.preventDefault();
@@ -140,140 +141,152 @@ export function IntegrationsPage({
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {integrations.map((integration) => (
-          <Card key={integration.id}>
-            <CardHeader className="flex flex-row items-center gap-4">
-              <img
-                src={`/logos/${integration.id}.svg`}
-                alt={`${integration.name} logo`}
-                className={`h-8 w-8 ${integration.id === "github" ? "dark:invert" : ""}`}
-              />
-              <div className="flex-1">
-                <CardTitle className="text-lg">{integration.name}</CardTitle>
-                <CardDescription>{integration.description}</CardDescription>
-              </div>
-              <Badge variant={integration.status === "ready" ? "default" : "secondary"}>
-                {integration.status === "ready" ? "Ready" : "Soon"}
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              {integration.id === "github" && integration.status === "ready" && (
-                <form onSubmit={handleGitHubSync} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="githubOwner">Owner</Label>
-                      <Input
-                        id="githubOwner"
-                        value={githubOwner}
-                        onChange={(e) => setGithubOwner(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="githubRepo">Repo</Label>
-                      <Input id="githubRepo" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} />
-                    </div>
+      <div className="space-y-4">
+        {integrations.map((integration) => {
+          const isOpen = openIntegration === integration.id;
+          return (
+            <Card key={integration.id}>
+              <button
+                onClick={() => setOpenIntegration(isOpen ? null : integration.id)}
+                className="flex w-full items-center gap-4 p-6 text-left hover:bg-accent/50"
+              >
+                <img
+                  src={`/logos/${integration.id}.svg`}
+                  alt={`${integration.name} logo`}
+                  className={`h-8 w-8 ${integration.id === "github" ? "dark:invert" : ""}`}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">{integration.name}</CardTitle>
+                    <Badge variant={integration.status === "ready" ? "default" : "secondary"}>
+                      {integration.status === "ready" ? "Ready" : "Soon"}
+                    </Badge>
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="githubToken">Token (optional)</Label>
-                    <Input
-                      id="githubToken"
-                      type="password"
-                      value={githubToken}
-                      onChange={(e) => setGithubToken(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" disabled={syncing || !githubOwner || !githubRepo}>
-                    {syncing ? "Syncing..." : "Sync from GitHub"}
-                  </Button>
-                </form>
+                  <CardDescription>{integration.description}</CardDescription>
+                </div>
+                <span className="text-lg text-muted-foreground">{isOpen ? "−" : "+"}</span>
+              </button>
+
+              {isOpen && (
+                <CardContent className="border-t">
+                  {integration.id === "github" && integration.status === "ready" && (
+                    <form onSubmit={handleGitHubSync} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="githubOwner">Owner</Label>
+                          <Input
+                            id="githubOwner"
+                            value={githubOwner}
+                            onChange={(e) => setGithubOwner(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="githubRepo">Repo</Label>
+                          <Input id="githubRepo" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="githubToken">Token (optional)</Label>
+                        <Input
+                          id="githubToken"
+                          type="password"
+                          value={githubToken}
+                          onChange={(e) => setGithubToken(e.target.value)}
+                        />
+                      </div>
+                      <Button type="submit" disabled={syncing || !githubOwner || !githubRepo}>
+                        {syncing ? "Syncing..." : "Sync from GitHub"}
+                      </Button>
+                    </form>
+                  )}
+                  {integration.id === "jira" && integration.status === "ready" && (
+                    <form onSubmit={handleJiraSync} className="space-y-4">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="jiraBaseUrl">Jira base URL</Label>
+                        <Input
+                          id="jiraBaseUrl"
+                          value={jiraBaseUrl}
+                          onChange={(e) => setJiraBaseUrl(e.target.value)}
+                          placeholder="https://yourdomain.atlassian.net"
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="jiraEmail">Email</Label>
+                        <Input
+                          id="jiraEmail"
+                          type="email"
+                          value={jiraEmail}
+                          onChange={(e) => setJiraEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="jiraToken">API token</Label>
+                        <Input
+                          id="jiraToken"
+                          type="password"
+                          value={jiraToken}
+                          onChange={(e) => setJiraToken(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="jiraProjectKey">Project key</Label>
+                        <Input
+                          id="jiraProjectKey"
+                          value={jiraProjectKey}
+                          onChange={(e) => setJiraProjectKey(e.target.value)}
+                          placeholder="PROJ"
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={syncing || !jiraBaseUrl || !jiraEmail || !jiraToken || !jiraProjectKey}
+                      >
+                        {syncing ? "Syncing..." : "Sync from Jira"}
+                      </Button>
+                    </form>
+                  )}
+                  {integration.id === "gitlab" && integration.status === "ready" && (
+                    <form onSubmit={handleGitLabSync} className="space-y-4">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="gitlabBaseUrl">GitLab base URL</Label>
+                        <Input
+                          id="gitlabBaseUrl"
+                          value={gitlabBaseUrl}
+                          onChange={(e) => setGitlabBaseUrl(e.target.value)}
+                          placeholder="https://gitlab.com"
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="gitlabToken">Access token</Label>
+                        <Input
+                          id="gitlabToken"
+                          type="password"
+                          value={gitlabToken}
+                          onChange={(e) => setGitlabToken(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="gitlabProjectPath">Project path (group/project)</Label>
+                        <Input
+                          id="gitlabProjectPath"
+                          value={gitlabProjectPath}
+                          onChange={(e) => setGitlabProjectPath(e.target.value)}
+                          placeholder="group/project"
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={syncing || !gitlabBaseUrl || !gitlabToken || !gitlabProjectPath}
+                      >
+                        {syncing ? "Syncing..." : "Sync from GitLab"}
+                      </Button>
+                    </form>
+                  )}
+                </CardContent>
               )}
-              {integration.id === "jira" && integration.status === "ready" && (
-                <form onSubmit={handleJiraSync} className="space-y-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="jiraBaseUrl">Jira base URL</Label>
-                    <Input
-                      id="jiraBaseUrl"
-                      value={jiraBaseUrl}
-                      onChange={(e) => setJiraBaseUrl(e.target.value)}
-                      placeholder="https://yourdomain.atlassian.net"
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="jiraEmail">Email</Label>
-                    <Input
-                      id="jiraEmail"
-                      type="email"
-                      value={jiraEmail}
-                      onChange={(e) => setJiraEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="jiraToken">API token</Label>
-                    <Input
-                      id="jiraToken"
-                      type="password"
-                      value={jiraToken}
-                      onChange={(e) => setJiraToken(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="jiraProjectKey">Project key</Label>
-                    <Input
-                      id="jiraProjectKey"
-                      value={jiraProjectKey}
-                      onChange={(e) => setJiraProjectKey(e.target.value)}
-                      placeholder="PROJ"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={syncing || !jiraBaseUrl || !jiraEmail || !jiraToken || !jiraProjectKey}
-                  >
-                    {syncing ? "Syncing..." : "Sync from Jira"}
-                  </Button>
-                </form>
-              )}
-              {integration.id === "gitlab" && integration.status === "ready" && (
-                <form onSubmit={handleGitLabSync} className="space-y-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="gitlabBaseUrl">GitLab base URL</Label>
-                    <Input
-                      id="gitlabBaseUrl"
-                      value={gitlabBaseUrl}
-                      onChange={(e) => setGitlabBaseUrl(e.target.value)}
-                      placeholder="https://gitlab.com"
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="gitlabToken">Access token</Label>
-                    <Input
-                      id="gitlabToken"
-                      type="password"
-                      value={gitlabToken}
-                      onChange={(e) => setGitlabToken(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="gitlabProjectPath">Project path (group/project)</Label>
-                    <Input
-                      id="gitlabProjectPath"
-                      value={gitlabProjectPath}
-                      onChange={(e) => setGitlabProjectPath(e.target.value)}
-                      placeholder="group/project"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={syncing || !gitlabBaseUrl || !gitlabToken || !gitlabProjectPath}
-                  >
-                    {syncing ? "Syncing..." : "Sync from GitLab"}
-                  </Button>
-                </form>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
