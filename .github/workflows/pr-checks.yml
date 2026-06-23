@@ -52,10 +52,14 @@ jobs:
           done
 
       - name: Run migrations
-        run: npm run db:migrate --workspace=apps/server
+        run: npm run db:migrate:deploy --workspace=apps/server
+        env:
+          DATABASE_URL: postgresql://ats:ats@localhost:5432/ats
 
       - name: Seed demo data
         run: npm run db:seed --workspace=apps/server
+        env:
+          DATABASE_URL: postgresql://ats:ats@localhost:5432/ats
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
