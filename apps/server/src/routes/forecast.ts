@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
 import { getPrisma } from "../db.js";
 import { generateForecast, type ForecastInput } from "../services/forecast.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export async function registerForecastRoutes(
   app: FastifyInstance,
@@ -8,12 +9,12 @@ export async function registerForecastRoutes(
 ) {
   const prisma = await getPrisma();
 
-  app.get("/project/:projectId", async (request: FastifyRequest<{ Params: { projectId: string } }>, reply: FastifyReply) => {
+  app.get<{ Params: { projectId: string } }>("/project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
     const forecast = await generateForecast(prisma, request.params.projectId, {});
     return forecast;
   });
 
-  app.post("/project/:projectId", async (request: FastifyRequest<{ Params: { projectId: string }; Body: ForecastInput }>, reply: FastifyReply) => {
+  app.post<{ Params: { projectId: string }; Body: ForecastInput }>("/project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
     const forecast = await generateForecast(prisma, request.params.projectId, request.body || {});
     return forecast;
   });

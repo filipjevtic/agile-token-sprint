@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../context/auth.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -24,16 +25,21 @@ interface UseTeamResult {
 }
 
 export function useTeam(projectId: string): UseTeamResult {
+  const { token } = useAuth();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   const fetchMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/v1/team/${projectId}`);
+      const res = await fetch(`${API_URL}/api/v1/team/${projectId}`, {
+        headers: authHeaders,
+      });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setMembers(data.members || []);
@@ -42,7 +48,8 @@ export function useTeam(projectId: string): UseTeamResult {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, token]);
 
   useEffect(() => {
     fetchMembers();
@@ -51,7 +58,7 @@ export function useTeam(projectId: string): UseTeamResult {
   async function addMember(input: { email: string; displayName?: string; role: TeamRole }) {
     const res = await fetch(`${API_URL}/api/v1/team/${projectId}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(input),
     });
     if (!res.ok) throw new Error(await res.text());
@@ -61,7 +68,7 @@ export function useTeam(projectId: string): UseTeamResult {
   async function updateMember(userId: string, role: TeamRole) {
     const res = await fetch(`${API_URL}/api/v1/team/${projectId}/${userId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ role }),
     });
     if (!res.ok) throw new Error(await res.text());
@@ -71,6 +78,7 @@ export function useTeam(projectId: string): UseTeamResult {
   async function removeMember(userId: string) {
     const res = await fetch(`${API_URL}/api/v1/team/${projectId}/${userId}`, {
       method: "DELETE",
+      headers: authHeaders,
     });
     if (!res.ok) throw new Error(await res.text());
     setRefreshKey((n) => n + 1);

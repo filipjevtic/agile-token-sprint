@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button.js";
 import { Input } from "../components/ui/input.js";
 import { Label } from "../components/ui/label.js";
 import { Badge } from "../components/ui/badge.js";
+import { useAuth } from "../context/auth.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -36,6 +37,9 @@ export function IntegrationsPage({
   projectId: string;
   onSync: (message: string) => void;
 }) {
+  const { token, user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const [githubOwner, setGithubOwner] = useState("");
   const [githubRepo, setGithubRepo] = useState("");
   const [githubToken, setGithubToken] = useState("");
@@ -61,7 +65,7 @@ export function IntegrationsPage({
     try {
       const res = await fetch(`${API_URL}/api/v1/integrations/github/${projectId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
           owner: githubOwner,
           repo: githubRepo,
@@ -86,7 +90,7 @@ export function IntegrationsPage({
     try {
       const res = await fetch(`${API_URL}/api/v1/integrations/jira/${projectId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
           baseUrl: jiraBaseUrl,
           email: jiraEmail,
@@ -112,7 +116,7 @@ export function IntegrationsPage({
     try {
       const res = await fetch(`${API_URL}/api/v1/integrations/gitlab/${projectId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
           baseUrl: gitlabBaseUrl,
           token: gitlabToken,
@@ -205,7 +209,7 @@ export function IntegrationsPage({
                           onChange={(e) => setGithubToken(e.target.value)}
                         />
                       </div>
-                      <Button type="submit" disabled={syncing || !githubOwner || !githubRepo}>
+                      <Button type="submit" disabled={syncing || !githubOwner || !githubRepo || !isAdmin}>
                         {syncing ? "Syncing..." : "Sync from GitHub"}
                       </Button>
                     </form>
@@ -250,7 +254,7 @@ export function IntegrationsPage({
                       </div>
                       <Button
                         type="submit"
-                        disabled={syncing || !jiraBaseUrl || !jiraEmail || !jiraToken || !jiraProjectKey}
+                        disabled={syncing || !jiraBaseUrl || !jiraEmail || !jiraToken || !jiraProjectKey || !isAdmin}
                       >
                         {syncing ? "Syncing..." : "Sync from Jira"}
                       </Button>
@@ -287,7 +291,7 @@ export function IntegrationsPage({
                       </div>
                       <Button
                         type="submit"
-                        disabled={syncing || !gitlabBaseUrl || !gitlabToken || !gitlabProjectPath}
+                        disabled={syncing || !gitlabBaseUrl || !gitlabToken || !gitlabProjectPath || !isAdmin}
                       >
                         {syncing ? "Syncing..." : "Sync from GitLab"}
                       </Button>

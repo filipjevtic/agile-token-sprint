@@ -43,13 +43,7 @@ export async function registerProjectRoutes(
     }
   );
 
-  app.put("/:projectId", async (
-    request: FastifyRequest<{
-      Params: { projectId: string };
-      Body: { tokenBudget?: number; costBudget?: number; tokenBudgetAlertThreshold?: number; costBudgetAlertThreshold?: number };
-    }>,
-    reply: FastifyReply
-  ) => {
+  app.put<{ Params: { projectId: string }; Body: { tokenBudget?: number; costBudget?: number; tokenBudgetAlertThreshold?: number; costBudgetAlertThreshold?: number } }>("/:projectId", { preHandler: requireAdmin }, async (request, reply) => {
     const project = await prisma.project.update({
       where: { id: request.params.projectId },
       data: {
@@ -62,13 +56,7 @@ export async function registerProjectRoutes(
     return project;
   });
 
-  app.put("/sprint/:sprintId", async (
-    request: FastifyRequest<{
-      Params: { sprintId: string };
-      Body: { tokenBudget?: number; costBudget?: number; tokenBudgetAlertThreshold?: number; costBudgetAlertThreshold?: number };
-    }>,
-    reply: FastifyReply
-  ) => {
+  app.put<{ Params: { sprintId: string }; Body: { tokenBudget?: number; costBudget?: number; tokenBudgetAlertThreshold?: number; costBudgetAlertThreshold?: number } }>("/sprint/:sprintId", { preHandler: requireAdmin }, async (request, reply) => {
     const sprint = await prisma.sprint.update({
       where: { id: request.params.sprintId },
       data: {

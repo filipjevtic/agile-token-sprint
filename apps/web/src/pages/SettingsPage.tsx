@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input.js";
 import { Label } from "../components/ui/label.js";
 import { Select } from "../components/ui/select.js";
 import { useTeam, type TeamRole } from "../hooks/use-team.js";
+import { useAuth } from "../context/auth.js";
 import { Wallet, Users } from "lucide-react";
 import { cn } from "../lib/utils.js";
 
@@ -27,6 +28,9 @@ export function SettingsPage({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const { token, user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const { members, loading: teamLoading, error: teamError, addMember, removeMember, updateMember } = useTeam(projectId);
   const [memberEmail, setMemberEmail] = useState("");
   const [memberDisplayName, setMemberDisplayName] = useState("");
@@ -42,7 +46,7 @@ export function SettingsPage({
     try {
       const res = await fetch(`${API_URL}/api/v1/projects/${projectId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
           tokenBudget: tokenBudget ? Number(tokenBudget) : null,
           costBudget: costBudget ? Number(costBudget) : null,
@@ -159,7 +163,7 @@ export function SettingsPage({
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || !isAdmin}>
                 {saving ? "Saving..." : "Save budget"}
               </Button>
             </form>
@@ -179,10 +183,15 @@ export function SettingsPage({
           <CardContent className="space-y-6">
             {teamError && <div className="rounded-md bg-destructive/15 p-4 text-sm text-destructive">Error: {teamError}</div>}
 
+            {!isAdmin && (
+              <p className="text-sm text-muted-foreground">
+                You have read-only access. Contact an admin to make changes.
+              </p>
+            )}
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-                if (!memberEmail) return;
+                if (!memberEmail || !isAdmin) return;
                 setTeamActionLoading(true);
                 try {
                   await addMember({
@@ -199,7 +208,7 @@ export function SettingsPage({
                   setTeamActionLoading(false);
                 }
               }}
-              className="space-y-4"
+              className={cn("space-y-4", !isAdmin && "opacity-50 pointer-events-none")}
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="grid gap-1.5">
@@ -236,7 +245,7 @@ export function SettingsPage({
                   </Select>
                 </div>
               </div>
-              <Button type="submit" disabled={teamActionLoading || !memberEmail}>
+              <Button type="submit" disabled={teamActionLoading || !memberEmail || !isAdmin}>
                 {teamActionLoading ? "Adding..." : "Add member"}
               </Button>
             </form>
@@ -258,44 +267,50 @@ export function SettingsPage({
                         <span className="text-xs text-muted-foreground">{member.email}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Select
-                          value={member.role}
-                          onChange={async (e) => {
-                            const role = e.target.value as TeamRole;
-                            setTeamActionLoading(true);
-                            try {
-                              await updateMember(member.userId, role);
-                            } catch (err) {
-                              setError(err instanceof Error ? err.message : "Failed to update role");
-                            } finally {
-                              setTeamActionLoading(false);
-                            }
-                          }}
-                          aria-label="Member role"
-                        >
-                          {ROLES.map((role) => (
-                            <option key={role} value={role}>
-                              {role}
-                            </option>
-                          ))}
-                        </Select>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            setTeamActionLoading(true);
-                            try {
-                              await removeMember(member.userId);
-                            } catch (err) {
-                              setError(err instanceof Error ? err.message : "Failed to remove member");
-                            } finally {
-                              setTeamActionLoading(false);
-                            }
-                          }}
-                          disabled={teamActionLoading}
-                        >
-                          Remove
-                        </Button>
+                        {isAdmin ? (
+                          <>
+                            <Select
+                              value={member.role}
+                              onChange={async (e) => {
+                                const role = e.target.value as TeamRole;
+                                setTeamActionLoading(true);
+                                try {
+                                  await updateMember(member.userId, role);
+                                } catch (err) {
+                                  setError(err instanceof Error ? err.message : "Failed to update role");
+                                } finally {
+                                  setTeamActionLoading(false);
+                                }
+                              }}
+                              aria-label="Member role"
+                            >
+                              {ROLES.map((role) => (
+                                <option key={role} value={role}>
+                                  {role}
+                                </option>
+                              ))}
+                            </Select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                setTeamActionLoading(true);
+                                try {
+                                  await removeMember(member.userId);
+                                } catch (err) {
+                                  setError(err instanceof Error ? err.message : "Failed to remove member");
+                                } finally {
+                                  setTeamActionLoading(false);
+                                }
+                              }}
+                              disabled={teamActionLoading}
+                            >
+                              Remove
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">{member.role}</span>
+                        )}
                       </div>
                     </li>
                   ))}

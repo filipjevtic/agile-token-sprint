@@ -1,14 +1,12 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
 import { listTeamMembers, addTeamMember, removeTeamMember, updateTeamMember, type TeamRole } from "../services/team.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 export async function registerTeamRoutes(
   app: FastifyInstance,
   _opts: FastifyPluginOptions
 ) {
-  app.get("/:projectId", async (
-    request: FastifyRequest<{ Params: { projectId: string } }>,
-    reply: FastifyReply
-  ) => {
+  app.get<{ Params: { projectId: string } }>("/:projectId", { preHandler: requireAuth }, async (request, reply) => {
     try {
       const members = await listTeamMembers(request.params.projectId);
       return { members };
@@ -17,13 +15,7 @@ export async function registerTeamRoutes(
     }
   });
 
-  app.post("/:projectId", async (
-    request: FastifyRequest<{
-      Params: { projectId: string };
-      Body: { email: string; displayName?: string; role: TeamRole };
-    }>,
-    reply: FastifyReply
-  ) => {
+  app.post<{ Params: { projectId: string }; Body: { email: string; displayName?: string; role: TeamRole } }>("/:projectId", { preHandler: requireAdmin }, async (request, reply) => {
     const { projectId } = request.params;
     const { email, displayName, role } = request.body;
 
@@ -39,13 +31,7 @@ export async function registerTeamRoutes(
     }
   });
 
-  app.put("/:projectId/:userId", async (
-    request: FastifyRequest<{
-      Params: { projectId: string; userId: string };
-      Body: { role: TeamRole };
-    }>,
-    reply: FastifyReply
-  ) => {
+  app.put<{ Params: { projectId: string; userId: string }; Body: { role: TeamRole } }>("/:projectId/:userId", { preHandler: requireAdmin }, async (request, reply) => {
     const { projectId, userId } = request.params;
     const { role } = request.body;
 
@@ -61,10 +47,7 @@ export async function registerTeamRoutes(
     }
   });
 
-  app.delete("/:projectId/:userId", async (
-    request: FastifyRequest<{ Params: { projectId: string; userId: string } }>,
-    reply: FastifyReply
-  ) => {
+  app.delete<{ Params: { projectId: string; userId: string } }>("/:projectId/:userId", { preHandler: requireAdmin }, async (request, reply) => {
     try {
       await removeTeamMember(request.params.projectId, request.params.userId);
       return { success: true };

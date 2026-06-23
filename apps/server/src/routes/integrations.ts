@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
 import { getPrisma } from "../db.js";
 import { syncGitHub, syncJira, syncGitLab } from "../integrations/index.js";
+import { requireAdmin } from "../middleware/auth.js";
 
 export async function registerIntegrationRoutes(
   app: FastifyInstance,
@@ -8,10 +9,7 @@ export async function registerIntegrationRoutes(
 ) {
   const prisma = await getPrisma();
 
-  app.post("/github/:projectId", async (
-    request: FastifyRequest<{ Params: { projectId: string }; Body: { token?: string; owner: string; repo: string } }>,
-    reply: FastifyReply
-  ) => {
+  app.post<{ Params: { projectId: string }; Body: { token?: string; owner: string; repo: string } }>("/github/:projectId", { preHandler: requireAdmin }, async (request, reply) => {
     const { projectId } = request.params;
     const { token, owner, repo } = request.body;
 
@@ -51,10 +49,7 @@ export async function registerIntegrationRoutes(
     return { success: true, provider: "github", ...result };
   });
 
-  app.post("/jira/:projectId", async (
-    request: FastifyRequest<{ Params: { projectId: string }; Body: { baseUrl: string; email: string; token: string; projectKey: string } }>,
-    reply: FastifyReply
-  ) => {
+  app.post<{ Params: { projectId: string }; Body: { baseUrl: string; email: string; token: string; projectKey: string } }>("/jira/:projectId", { preHandler: requireAdmin }, async (request, reply) => {
     const { projectId } = request.params;
     const { baseUrl, email, token, projectKey } = request.body;
 
@@ -95,10 +90,7 @@ export async function registerIntegrationRoutes(
     return { success: true, provider: "jira", ...result };
   });
 
-  app.post("/gitlab/:projectId", async (
-    request: FastifyRequest<{ Params: { projectId: string }; Body: { baseUrl?: string; token: string; projectPath: string } }>,
-    reply: FastifyReply
-  ) => {
+  app.post<{ Params: { projectId: string }; Body: { baseUrl?: string; token: string; projectPath: string } }>("/gitlab/:projectId", { preHandler: requireAdmin }, async (request, reply) => {
     const { projectId } = request.params;
     const { baseUrl = "https://gitlab.com", token, projectPath } = request.body;
 
