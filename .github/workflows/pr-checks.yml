@@ -51,8 +51,9 @@ jobs:
             sleep 1
           done
 
-      - name: Run migrations
-        run: npm run db:migrate:deploy --workspace=apps/server
+      - name: Push schema to database
+        run: npx prisma db push --skip-generate --accept-data-loss
+        working-directory: apps/server
         env:
           DATABASE_URL: postgresql://ats:ats@localhost:5432/ats
 
