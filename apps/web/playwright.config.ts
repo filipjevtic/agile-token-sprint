@@ -19,7 +19,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npm run start --workspace=apps/server",
+      command: "cd ../server && npm run start",
       url: "http://localhost:3000/health",
       timeout: 120 * 1000,
       reuseExistingServer: !process.env.CI,
