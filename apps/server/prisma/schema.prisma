@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projects  Project[]
+  users     User[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  slug        String
+  tokenBudget Int?     // optional token budget per project
+  costBudget  Float?   // optional USD cost budget per project
+  tokenBudgetAlertThreshold Int? @default(80) // percent at which to alert on token budget
+  costBudgetAlertThreshold  Int? @default(80) // percent at which to alert on cost budget
+  issueTracker IssueTrackerConfig?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  tickets     Ticket[]
+  events      Event[]
+  sprints     Sprint[]
+  teamMembers TeamMember[]
+
+  @@unique([workspaceId, slug])
+}
+
+model User {
+  id          String   @id @default(uuid())
+  workspaceId String
+  email       String
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  events      Event[]
+  memberships TeamMember[]
+
+  @@unique([workspaceId, email])
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  role      String   @default("member") // owner, admin, member, viewer
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([projectId, userId])
+}
+
+model IssueTrackerConfig {
+  id        String   @id @default(uuid())
+  projectId String   @unique
+  provider  String   // jira, github, gitlab
+  baseUrl   String
+  apiToken  String?
+  projectKey String?
+  repository String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id])
+}
+
+model Ticket {
+  id            String   @id @default(uuid())
+  projectId     String
+  externalId    String   // e.g., Jira issue key or GitHub issue number
+  externalUrl   String?
+  title         String
+  description   String?
+  status        String
+  issueType     String?
+  storyPoints   Int?
+  assigneeId    String?
+  sprintId      String?
+  labels        String[]
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  project       Project  @relation(fields: [projectId], references: [id])
+  sprint        Sprint?  @relation(fields: [sprintId], references: [id])
+  events        Event[]
+
+  @@unique([projectId, externalId])
+}
+
+model Sprint {
+  id          String   @id @default(uuid())
+  projectId   String
+  externalId  String?
+  name        String
+  startDate   DateTime?
+  endDate     DateTime?
+  status      String   @default("future")
+  goal        String?
+  tokenBudget Int?     // optional token budget for this sprint
+  costBudget  Float?   // optional USD cost budget for this sprint
+  tokenBudgetAlertThreshold Int? @default(80) // percent at which to alert on token budget
+  costBudgetAlertThreshold  Int? @default(80) // percent at which to alert on cost budget
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project  @relation(fields: [projectId], references: [id])
+  tickets     Ticket[]
+
+  @@unique([projectId, externalId])
+}
+
+model Event {
+  id            String   @id @default(uuid())
+  eventId       String   @unique
+  eventType     String
+  timestamp     DateTime
+  source        String
+  workspaceId   String
+  projectId     String
+  userId        String
+  ticketId      String?
+  traceId       String?
+  spanId        String?
+  parentSpanId  String?
+  payload       Json
+  metadata      Json     @default("{}")
+  // Derived fields populated by association service
+  associationMethod String?
+  associationConfidence Float?
+  createdAt     DateTime @default(now())
+  project       Project  @relation(fields: [projectId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+  ticket        Ticket?  @relation(fields: [ticketId], references: [id])
+
+  @@index([projectId, ticketId])
+  @@index([projectId, timestamp])
+  @@index([traceId])
+}

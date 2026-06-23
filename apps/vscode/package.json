@@ -1,0 +1,75 @@
+{
+  "name": "@agile-token-sprint/vscode",
+  "displayName": "Agile Token Sprint",
+  "description": "Track token usage and effort signals tied to tickets.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "agile-token-sprint",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agileTokenSprint.setTicket",
+        "title": "Set Current Ticket",
+        "category": "Agile Token Sprint"
+      },
+      {
+        "command": "agileTokenSprint.getStatus",
+        "title": "Show Status",
+        "category": "Agile Token Sprint"
+      }
+    ],
+    "configuration": {
+      "title": "Agile Token Sprint",
+      "properties": {
+        "agileTokenSprint.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Server URL for event ingestion"
+        },
+        "agileTokenSprint.ingestApiKey": {
+          "type": "string",
+          "default": "dev-key",
+          "description": "API key for event ingestion"
+        },
+        "agileTokenSprint.workspaceId": {
+          "type": "string",
+          "default": "default",
+          "description": "Workspace ID"
+        },
+        "agileTokenSprint.projectId": {
+          "type": "string",
+          "default": "default",
+          "description": "Project ID"
+        },
+        "agileTokenSprint.userId": {
+          "type": "string",
+          "default": "default",
+          "description": "User ID"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "@agile-token-sprint/schema": "*"
+  }
+}

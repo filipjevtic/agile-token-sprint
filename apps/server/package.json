@@ -1,0 +1,32 @@
+{
+  "name": "@agile-token-sprint/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc && prisma generate",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:generate": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "prisma": {
+    "seed": "npm run db:seed"
+  },
+  "dependencies": {
+    "@agile-token-sprint/schema": "*",
+    "@fastify/cors": "^9.0.0",
+    "@prisma/client": "^5.15.0",
+    "fastify": "^4.28.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prisma": "^5.15.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.0"
+  }
+}
