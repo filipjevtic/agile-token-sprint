@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "../context/auth.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -56,6 +57,9 @@ export interface Forecast {
 }
 
 export function useProjectData(projectId: string) {
+  const { token } = useAuth();
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   const [sprints, setSprints] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedSprint, setSelectedSprint] = useState<string | null>(null);
   const [summary, setSummary] = useState<SprintSummary | null>(null);
@@ -69,8 +73,9 @@ export function useProjectData(projectId: string) {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!projectId) return;
     setError(null);
-    fetch(`${API_URL}/api/v1/sprints/project/${projectId}`)
+    fetch(`${API_URL}/api/v1/sprints/project/${projectId}`, { headers: authHeader })
       .then(async (res) => {
         if (!res.ok) throw new Error(await res.text());
         return res.json();
@@ -85,13 +90,14 @@ export function useProjectData(projectId: string) {
         }
       })
       .catch((err) => setError(err.message));
-  }, [projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, token]);
 
   useEffect(() => {
     if (!selectedSprint) return;
     setSummaryLoading(true);
     setError(null);
-    fetch(`${API_URL}/api/v1/sprints/summary/${selectedSprint}`)
+    fetch(`${API_URL}/api/v1/sprints/summary/${selectedSprint}`, { headers: authHeader })
       .then(async (res) => {
         if (!res.ok) throw new Error(await res.text());
         return res.json();
@@ -99,15 +105,17 @@ export function useProjectData(projectId: string) {
       .then((data) => setSummary(data))
       .catch((err) => setError(err.message))
       .finally(() => setSummaryLoading(false));
-  }, [selectedSprint]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSprint, token]);
 
-  const refreshForecast = async (target: string) => {
+  const refreshForecast = useCallback(async (target: string) => {
+    if (!projectId) return;
     setForecastLoading(true);
     setError(null);
     try {
       const res = await fetch(`${API_URL}/api/v1/forecast/project/${projectId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({ targetStoryPoints: Number(target) || 0 }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -118,7 +126,8 @@ export function useProjectData(projectId: string) {
     } finally {
       setForecastLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, token]);
 
   useEffect(() => {
     refreshForecast(forecastTarget);

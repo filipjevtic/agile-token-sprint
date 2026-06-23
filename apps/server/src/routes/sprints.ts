@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
 import { getPrisma } from "../db.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export async function registerSprintRoutes(
   app: FastifyInstance,
@@ -7,7 +8,7 @@ export async function registerSprintRoutes(
 ) {
   const prisma = await getPrisma();
 
-  app.get("/project/:projectId", async (request: FastifyRequest<{ Params: { projectId: string } }>, reply: FastifyReply) => {
+  app.get<{ Params: { projectId: string } }>("/project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
     const sprints = await prisma.sprint.findMany({
       where: { projectId: request.params.projectId },
       orderBy: { startDate: "desc" },
@@ -15,7 +16,7 @@ export async function registerSprintRoutes(
     return { sprints };
   });
 
-  app.get("/summary/:sprintId", async (request: FastifyRequest<{ Params: { sprintId: string } }>, reply: FastifyReply) => {
+  app.get<{ Params: { sprintId: string } }>("/summary/:sprintId", { preHandler: requireAuth }, async (request, reply) => {
     const sprint = await prisma.sprint.findUnique({
       where: { id: request.params.sprintId },
       include: {
