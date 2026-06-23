@@ -90,6 +90,7 @@ export function AppLayout({
               size="sm"
               className="w-full justify-start"
               onClick={() => setTheme(theme === "dark" ? "light" : theme === "light" ? "system" : "dark")}
+              aria-label="Toggle theme"
             >
               {theme === "dark" ? <Moon className="mr-2 h-4 w-4" /> : theme === "light" ? <Sun className="mr-2 h-4 w-4" /> : <Monitor className="mr-2 h-4 w-4" />}
               Theme
