@@ -9,7 +9,7 @@ COPY apps/server/package.json ./apps/server/
 COPY apps/proxy/package.json ./apps/proxy/
 COPY apps/web/package.json ./apps/web/
 
-RUN npm install --omit=dev --workspace=apps/server --include-workspace-root
+RUN npm install --workspace=apps/server --include-workspace-root
 
 # Copy source and build.
 COPY packages/schema ./packages/schema
