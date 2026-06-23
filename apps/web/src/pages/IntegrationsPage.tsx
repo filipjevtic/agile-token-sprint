@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card.js";
 import { Button } from "../components/ui/button.js";
 import { Input } from "../components/ui/input.js";
@@ -129,9 +129,16 @@ export function IntegrationsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
+        <p className="text-sm text-muted-foreground">Connect issue trackers to import tickets and sprints.</p>
+      </div>
 
-      {error && <div className="rounded-md bg-destructive/15 p-4 text-sm text-destructive">Error: {error}</div>}
+      {error && (
+        <div className="rounded-md bg-destructive/15 p-4 text-sm text-destructive">
+          Error: {error}
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {integrations.map((integration) => (
@@ -271,3 +278,4 @@ export function IntegrationsPage({
     </div>
   );
 }
+

@@ -6,10 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage.js";
 import { ForecastPage } from "./pages/ForecastPage.js";
 import { IntegrationsPage } from "./pages/IntegrationsPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
-import { Button } from "./components/ui/button.js";
-import { Input } from "./components/ui/input.js";
-import { Label } from "./components/ui/label.js";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAlerts } from "./hooks/use-alerts.js";
 import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.js";
 
@@ -21,30 +18,20 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout>
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="grid w-full max-w-xs items-center gap-1.5">
-            <Label htmlFor="projectId">Project ID</Label>
-            <Input
-              id="projectId"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              placeholder="default"
-            />
-          </div>
-          <Button variant="outline" onClick={() => data.refreshForecast(data.forecastTarget)}>
-            Refresh forecast
-          </Button>
-        </div>
-
+      <AppLayout projectId={projectId} onProjectChange={setProjectId}>
         {data.error && (
-          <div className="mb-6 flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
+          <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            {data.error}
-          </div>
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{data.error}</AlertDescription>
+          </Alert>
         )}
         {data.syncMessage && (
-          <div className="mb-6 rounded-md bg-green-100 p-4 text-sm text-green-800">{data.syncMessage}</div>
+          <Alert className="mb-6 border-green-500/50 text-green-700 bg-green-50 dark:bg-green-950/30 dark:text-green-200">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertTitle>Sync complete</AlertTitle>
+            <AlertDescription>{data.syncMessage}</AlertDescription>
+          </Alert>
         )}
 
         {alerts.length > 0 && (
