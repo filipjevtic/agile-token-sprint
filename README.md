@@ -1,5 +1,7 @@
 # Agile Token Sprint
 
+[![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fagile--token--sprint-blue?logo=github)](https://github.com/filipjevtic/agile-token-sprint)
+
 Self-hosted, open-source platform that captures developer LLM token usage, traces, and other effort signals from IDEs, API proxies, and CLI tools, associates them with Jira / GitHub / GitLab tickets, and helps PMs build more realistic sprint plans.
 
 ## Goal
