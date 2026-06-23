@@ -151,6 +151,7 @@ export function IntegrationsPage({
                 role="button"
                 tabIndex={0}
                 aria-expanded={isOpen}
+                data-testid={`integration-${integration.id}`}
                 onClick={() => setOpenIntegration(isOpen ? null : integration.id)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
