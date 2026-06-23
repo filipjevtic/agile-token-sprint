@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import { Card, CardContent, CardDescription, CardTitle } from "../components/ui/card.js";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "../components/ui/button.js";
 import { Input } from "../components/ui/input.js";
 import { Label } from "../components/ui/label.js";
@@ -146,9 +147,18 @@ export function IntegrationsPage({
           const isOpen = openIntegration === integration.id;
           return (
             <Card key={integration.id}>
-              <button
+              <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={isOpen}
                 onClick={() => setOpenIntegration(isOpen ? null : integration.id)}
-                className="flex w-full items-center gap-4 p-6 text-left hover:bg-accent/50"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setOpenIntegration(isOpen ? null : integration.id);
+                  }
+                }}
+                className="flex w-full cursor-pointer items-center gap-4 p-6 text-left hover:bg-accent/50"
               >
                 <img
                   src={`/logos/${integration.id}.svg`}
@@ -164,8 +174,8 @@ export function IntegrationsPage({
                   </div>
                   <CardDescription>{integration.description}</CardDescription>
                 </div>
-                <span className="text-lg text-muted-foreground">{isOpen ? "−" : "+"}</span>
-              </button>
+                {isOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+              </div>
 
               {isOpen && (
                 <CardContent className="border-t">
