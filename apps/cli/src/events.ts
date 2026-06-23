@@ -1,4 +1,4 @@
-﻿import { config } from "./config.js";
+import { config } from "./config.js";
 import type { Event } from "@burnwise/schema";
 
 export async function emitEvent(event: Event): Promise<void> {

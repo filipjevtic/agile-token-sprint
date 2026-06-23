@@ -1,4 +1,4 @@
-﻿import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
 import { ingestBatchSchema, type IngestResponse } from "@burnwise/schema";
 import { config } from "../config.js";
 import { getPrisma } from "../db.js";

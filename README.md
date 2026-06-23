@@ -1,4 +1,4 @@
-﻿# Burnwise
+# Burnwise
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fburnwise-blue?logo=github)](https://github.com/filipjevtic/burnwise)

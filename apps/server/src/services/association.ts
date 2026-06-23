@@ -1,4 +1,4 @@
-﻿import type { Event } from "@burnwise/schema";
+import type { Event } from "@burnwise/schema";
 import { getPrisma } from "../db.js";
 
 export interface AssociationResult {

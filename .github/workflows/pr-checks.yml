@@ -1,4 +1,4 @@
-﻿name: PR Checks
+name: PR Checks
 
 on:
   pull_request:
@@ -28,6 +28,9 @@ jobs:
 
       - name: Build shared schema
         run: npm run build --workspace=packages/schema
+
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=apps/server
 
       - name: Typecheck
         run: npm run typecheck --workspaces

@@ -1,4 +1,4 @@
-﻿.PHONY: dev build typecheck test e2e db/migrate db/seed docker/up docker/down help
+.PHONY: dev build typecheck test e2e db/migrate db/seed docker/up docker/down help
 
 ##@ Development
 

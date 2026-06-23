@@ -1,4 +1,4 @@
-﻿import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Gauge, Plug, Settings, Sun, Moon, Monitor } from "lucide-react";
 import { Button } from "../ui/button.js";
 import { useTheme } from "../../hooks/use-theme.js";

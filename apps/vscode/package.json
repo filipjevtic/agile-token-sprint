@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@burnwise/vscode",
   "displayName": "Burnwise",
   "description": "Track token usage and effort signals tied to tickets.",

@@ -1,4 +1,4 @@
-﻿# Contributing to Burnwise
+# Contributing to Burnwise
 
 Thank you for your interest in contributing! This document outlines how to get started and what we expect from contributions.
 

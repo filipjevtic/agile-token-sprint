@@ -1,4 +1,4 @@
-﻿## Description
+## Description
 
 Briefly describe what this PR does and why.
 

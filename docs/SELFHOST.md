@@ -1,4 +1,4 @@
-﻿# Self-Hosting Guide
+# Self-Hosting Guide
 
 This document explains how to run Burnwise on your own infrastructure.
 

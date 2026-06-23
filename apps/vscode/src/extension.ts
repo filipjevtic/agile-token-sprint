@@ -1,4 +1,4 @@
-﻿import * as vscode from "vscode";
+import * as vscode from "vscode";
 import { type Event } from "@burnwise/schema";
 
 let currentTicketId: string | undefined;
