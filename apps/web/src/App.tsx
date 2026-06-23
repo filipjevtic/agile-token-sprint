@@ -12,6 +12,7 @@ import { LoginPage } from "./pages/LoginPage.js";
 import { SetupPage } from "./pages/SetupPage.js";
 import { CreateProjectPage } from "./pages/CreateProjectPage.js";
 import { OAuthCallbackPage } from "./pages/OAuthCallbackPage.js";
+import { InvitePage } from "./pages/InvitePage.js";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAlerts } from "./hooks/use-alerts.js";
 import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.js";
@@ -44,6 +45,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/setup" element={<SetupPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/invite/:token" element={<InvitePage />} />
         <Route path="*" element={<Navigate to="/setup" replace />} />
       </Routes>
     );
@@ -54,6 +56,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/invite/:token" element={<InvitePage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );

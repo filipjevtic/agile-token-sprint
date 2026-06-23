@@ -6,7 +6,7 @@ import { Label } from "../components/ui/label.js";
 import { Select } from "../components/ui/select.js";
 import { useTeam, type TeamRole } from "../hooks/use-team.js";
 import { useAuth } from "../context/auth.js";
-import { Wallet, Users } from "lucide-react";
+import { Wallet, Users, Link2, Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -37,6 +37,40 @@ export function SettingsPage({
   const [memberRole, setMemberRole] = useState<TeamRole>("member");
   const [teamActionLoading, setTeamActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"budget" | "team">("budget");
+
+  const [inviteRole, setInviteRole] = useState<TeamRole>("member");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
+
+  async function handleCreateInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteLoading(true);
+    setInviteLink(null);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/invites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({ projectId, role: inviteRole, email: inviteEmail || undefined }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      setInviteLink(data.link);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create invite");
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
+  async function copyInviteLink() {
+    if (!inviteLink) return;
+    await navigator.clipboard.writeText(inviteLink);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -187,6 +221,48 @@ export function SettingsPage({
               <p className="text-sm text-muted-foreground">
                 You have read-only access. Contact an admin to make changes.
               </p>
+            )}
+
+            {isAdmin && (
+              <div className="rounded-md border p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Link2 className="h-4 w-4" />
+                  Generate invite link
+                </div>
+                <form onSubmit={handleCreateInvite} className="flex flex-wrap gap-2 items-end">
+                  <div className="grid gap-1.5 flex-1 min-w-[160px]">
+                    <Label htmlFor="inviteEmail" className="text-xs">Email (optional)</Label>
+                    <Input
+                      id="inviteEmail"
+                      type="email"
+                      placeholder="lock to address"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="inviteRole" className="text-xs">Role</Label>
+                    <Select
+                      id="inviteRole"
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value as TeamRole)}
+                    >
+                      {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </Select>
+                  </div>
+                  <Button type="submit" variant="outline" size="sm" disabled={inviteLoading}>
+                    {inviteLoading ? "Generating…" : "Generate link"}
+                  </Button>
+                </form>
+                {inviteLink && (
+                  <div className="flex items-center gap-2">
+                    <Input value={inviteLink} readOnly className="text-xs font-mono" />
+                    <Button variant="outline" size="sm" onClick={copyInviteLink} className="shrink-0">
+                      {inviteCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                )}
+              </div>
             )}
             <form
               onSubmit={async (e) => {
