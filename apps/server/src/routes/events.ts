@@ -7,6 +7,7 @@ import { associateEvent, createAssociationCache } from "../services/association.
 import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace, assertTicketInWorkspace } from "../middleware/scope.js";
 import { verifyApiKey } from "../services/apikey.js";
+import { parsePagination, buildPaginationMeta } from "../lib/pagination.js";
 
 /** Max rows per createMany statement to keep parameter counts well-bounded. */
 const INSERT_CHUNK_SIZE = 500;
@@ -128,33 +129,45 @@ export async function registerEventRoutes(
     return response;
   });
 
-  app.get<{ Params: { ticketId: string } }>("/by-ticket/:ticketId", { preHandler: requireAuth }, async (request, reply) => {
+  app.get<{ Params: { ticketId: string }; Querystring: { limit?: string; offset?: string } }>("/by-ticket/:ticketId", { preHandler: requireAuth }, async (request, reply) => {
     const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
     if (!(await assertTicketInWorkspace(prisma, reply, request.params.ticketId, workspaceId))) return;
-    const events = await prisma.event.findMany({
-      where: { ticketId: request.params.ticketId },
-      orderBy: { timestamp: "desc" },
-      take: 1000,
-    });
-    return { events };
+    const pagination = parsePagination(request.query);
+    const where = { ticketId: request.params.ticketId };
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        where,
+        orderBy: { timestamp: "desc" },
+        skip: pagination.offset,
+        take: pagination.limit,
+      }),
+      prisma.event.count({ where }),
+    ]);
+    return { events, pagination: buildPaginationMeta(pagination, total) };
   });
 
-  app.get<{ Params: { projectId: string }; Querystring: { from?: string; to?: string } }>("/by-project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
+  app.get<{ Params: { projectId: string }; Querystring: { from?: string; to?: string; limit?: string; offset?: string } }>("/by-project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
     const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
     const { projectId } = request.params;
     if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
     const { from, to } = request.query;
-    const events = await prisma.event.findMany({
-      where: {
-        projectId,
-        timestamp: {
-          gte: from ? new Date(from) : undefined,
-          lte: to ? new Date(to) : undefined,
-        },
+    const pagination = parsePagination(request.query);
+    const where = {
+      projectId,
+      timestamp: {
+        gte: from ? new Date(from) : undefined,
+        lte: to ? new Date(to) : undefined,
       },
-      orderBy: { timestamp: "desc" },
-      take: 1000,
-    });
-    return { events };
+    };
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        where,
+        orderBy: { timestamp: "desc" },
+        skip: pagination.offset,
+        take: pagination.limit,
+      }),
+      prisma.event.count({ where }),
+    ]);
+    return { events, pagination: buildPaginationMeta(pagination, total) };
   });
 }

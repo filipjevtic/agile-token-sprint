@@ -3,6 +3,7 @@ import { getPrisma } from "../db.js";
 import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace, assertTicketInWorkspace } from "../middleware/scope.js";
 import { rollupEvents } from "../services/rollup.js";
+import { parsePagination, buildPaginationMeta } from "../lib/pagination.js";
 
 export async function registerTicketRoutes(
   app: FastifyInstance,
@@ -10,15 +11,22 @@ export async function registerTicketRoutes(
 ) {
   const prisma = await getPrisma();
 
-  app.get<{ Params: { projectId: string } }>("/project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
+  app.get<{ Params: { projectId: string }; Querystring: { limit?: string; offset?: string } }>("/project/:projectId", { preHandler: requireAuth }, async (request, reply) => {
     const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
     if (!(await assertProjectInWorkspace(prisma, reply, request.params.projectId, workspaceId))) return;
-    const tickets = await prisma.ticket.findMany({
-      where: { projectId: request.params.projectId },
-      include: { sprint: true },
-      orderBy: { updatedAt: "desc" },
-    });
-    return { tickets };
+    const pagination = parsePagination(request.query, { defaultLimit: 200 });
+    const where = { projectId: request.params.projectId };
+    const [tickets, total] = await Promise.all([
+      prisma.ticket.findMany({
+        where,
+        include: { sprint: true },
+        orderBy: { updatedAt: "desc" },
+        skip: pagination.offset,
+        take: pagination.limit,
+      }),
+      prisma.ticket.count({ where }),
+    ]);
+    return { tickets, pagination: buildPaginationMeta(pagination, total) };
   });
 
   app.get<{ Params: { ticketId: string } }>("/summary/:ticketId", { preHandler: requireAuth }, async (request, reply) => {

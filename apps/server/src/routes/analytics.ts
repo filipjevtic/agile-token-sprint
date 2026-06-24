@@ -8,6 +8,7 @@ import { toCsv, type CsvColumn } from "../services/csv.js";
 import { detectHighOutliers } from "../services/anomaly.js";
 import { computeVelocity } from "../services/velocity.js";
 import { computeEfficiency } from "../services/efficiency.js";
+import { parsePagination, buildPaginationMeta } from "../lib/pagination.js";
 
 /**
  * Dashboard-facing analytics. These endpoints are JWT-authenticated (browser)
@@ -22,7 +23,7 @@ export async function registerAnalyticsRoutes(
 
   // List sessions for a project with per-session usage rollups.
   app.get<{
-    Querystring: { projectId?: string; sprintId?: string; status?: string; limit?: string };
+    Querystring: { projectId?: string; sprintId?: string; status?: string; limit?: string; offset?: string };
   }>("/sessions", { preHandler: requireAuth }, async (request, reply) => {
     const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
     const { projectId, sprintId, status } = request.query;
@@ -31,22 +32,27 @@ export async function registerAnalyticsRoutes(
     }
     if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
 
-    const limit = Math.min(Math.max(Number(request.query.limit) || 50, 1), 200);
+    const pagination = parsePagination(request.query, { defaultLimit: 50, maxLimit: 200 });
+    const where = {
+      projectId,
+      ...(status ? { status } : {}),
+      ...(sprintId ? { ticket: { sprintId } } : {}),
+    };
 
-    const sessions = await prisma.session.findMany({
-      where: {
-        projectId,
-        ...(status ? { status } : {}),
-        ...(sprintId ? { ticket: { sprintId } } : {}),
-      },
-      orderBy: { startedAt: "desc" },
-      take: limit,
-      include: {
-        user: { select: { id: true, email: true, displayName: true } },
-        ticket: { select: { id: true, externalId: true, title: true } },
-        events: { select: { eventType: true, payload: true } },
-      },
-    });
+    const [sessions, total] = await Promise.all([
+      prisma.session.findMany({
+        where,
+        orderBy: { startedAt: "desc" },
+        skip: pagination.offset,
+        take: pagination.limit,
+        include: {
+          user: { select: { id: true, email: true, displayName: true } },
+          ticket: { select: { id: true, externalId: true, title: true } },
+          events: { select: { eventType: true, payload: true } },
+        },
+      }),
+      prisma.session.count({ where }),
+    ]);
 
     const rollups = sessions.map((s) => rollupEvents(s.events));
     // Flag sessions whose token usage is a statistical high outlier across the
@@ -77,6 +83,7 @@ export async function registerAnalyticsRoutes(
           tokenAnomaly: tokenOutliers[i],
         };
       }),
+      pagination: buildPaginationMeta(pagination, total),
     };
   });
 
