@@ -6,6 +6,7 @@ import { rollupEvents, aggregateByDeveloper } from "../services/rollup.js";
 import { bucketEvents, type Bucket } from "../services/trends.js";
 import { toCsv, type CsvColumn } from "../services/csv.js";
 import { detectHighOutliers } from "../services/anomaly.js";
+import { computeVelocity } from "../services/velocity.js";
 
 /**
  * Dashboard-facing analytics. These endpoints are JWT-authenticated (browser)
@@ -146,6 +147,41 @@ export async function registerAnalyticsRoutes(
     });
 
     return { developers };
+  });
+
+  // Sprint velocity: committed vs completed story points, completion rate, and
+  // a rolling average per sprint. The core sprint-planning signal.
+  app.get<{
+    Querystring: { projectId?: string; window?: string };
+  }>("/velocity", { preHandler: requireAuth }, async (request, reply) => {
+    const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
+    const { projectId } = request.query;
+    if (!projectId) {
+      return reply.status(400).send({ error: "projectId is required" });
+    }
+    if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
+
+    const window = Math.min(Math.max(Number(request.query.window) || 3, 1), 12);
+
+    const sprints = await prisma.sprint.findMany({
+      where: { projectId },
+      orderBy: [{ startDate: "asc" }, { createdAt: "asc" }],
+      include: {
+        tickets: { select: { status: true, storyPoints: true } },
+      },
+    });
+
+    return computeVelocity(
+      sprints.map((s) => ({
+        id: s.id,
+        name: s.name,
+        startDate: s.startDate,
+        endDate: s.endDate,
+        status: s.status,
+        tickets: s.tickets,
+      })),
+      window
+    );
   });
 
   // Session detail with its events and a rollup.
