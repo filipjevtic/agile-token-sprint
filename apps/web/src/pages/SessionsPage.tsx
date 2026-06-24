@@ -6,7 +6,9 @@ import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table.js";
 import { useSessions, useSessionDetail, type SessionListItem } from "../hooks/use-sessions.js";
-import { Activity, X } from "lucide-react";
+import { useAuth } from "../context/auth.js";
+import { downloadCsv } from "../lib/download.js";
+import { Activity, X, Download } from "lucide-react";
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -24,6 +26,19 @@ export function SessionsPage({
   const [sprintFilter, setSprintFilter] = useState<string>("");
   const { sessions, loading, error } = useSessions(projectId, sprintFilter || null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const { token } = useAuth();
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ projectId });
+      if (sprintFilter) params.set("sprintId", sprintFilter);
+      await downloadCsv(`/api/v1/analytics/export/sessions?${params}`, "sessions.csv", token);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -40,6 +55,10 @@ export function SessionsPage({
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </Select>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting || sessions.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            {exporting ? "Exporting…" : "Export CSV"}
+          </Button>
         </div>
       </div>
 
