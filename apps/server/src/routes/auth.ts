@@ -25,6 +25,7 @@ export async function registerAuthRoutes(
 
   app.post(
     "/setup",
+    { config: { rateLimit: { max: config.rateLimit.authMax, timeWindow: config.rateLimit.timeWindow } } },
     async (
       request: FastifyRequest<{ Body: { email: string; password: string; displayName?: string; workspaceName?: string } }>,
       reply: FastifyReply
@@ -73,6 +74,7 @@ export async function registerAuthRoutes(
 
   app.post(
     "/login",
+    { config: { rateLimit: { max: config.rateLimit.authMax, timeWindow: config.rateLimit.timeWindow } } },
     async (
       request: FastifyRequest<{ Body: { email: string; password: string } }>,
       reply: FastifyReply

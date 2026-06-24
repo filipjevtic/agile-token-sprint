@@ -29,6 +29,11 @@ export default defineConfig({
         INGEST_API_KEY: "dev-key",
         PORT: "3000",
         JWT_SECRET: "e2e-test-secret",
+        // Keep rate limiting active (so the plugin is exercised end-to-end) but
+        // generous enough that the test suite's repeated logins never trip it.
+        RATE_LIMIT_MAX: "100000",
+        RATE_LIMIT_AUTH_MAX: "100000",
+        RATE_LIMIT_INGEST_MAX: "100000",
       },
     },
     {
