@@ -48,8 +48,8 @@ npm install
 # Start Postgres
 docker compose up -d postgres
 
-# Push the schema (no migrations needed in dev)
-npm run db:push --workspace=apps/server
+# Apply database migrations
+npm run db:migrate:deploy --workspace=apps/server
 
 # Start the server, proxy, and web dashboard in separate terminals
 npm run dev --workspace=apps/server

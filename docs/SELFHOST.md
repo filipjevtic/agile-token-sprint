@@ -35,7 +35,7 @@ Set `DATABASE_URL` to your PostgreSQL instance:
 ```bash
 export DATABASE_URL=postgresql://user:pass@your-db-host:5432/ats
 export JWT_SECRET=your-random-secret
-npm run db:push --workspace=apps/server
+npm run db:migrate:deploy --workspace=apps/server
 npm run start --workspace=apps/server
 ```
 

@@ -1,0 +1,323 @@
+-- CreateTable
+CREATE TABLE "Workspace" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "setupComplete" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Workspace_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Project" (
+    "id" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "tokenBudget" INTEGER,
+    "costBudget" DOUBLE PRECISION,
+    "tokenBudgetAlertThreshold" INTEGER DEFAULT 80,
+    "costBudgetAlertThreshold" INTEGER DEFAULT 80,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "displayName" TEXT,
+    "passwordHash" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'member',
+    "ssoProvider" TEXT,
+    "ssoId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TeamMember" (
+    "id" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'member',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TeamMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "IssueTrackerConfig" (
+    "id" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "baseUrl" TEXT NOT NULL,
+    "apiToken" TEXT,
+    "projectKey" TEXT,
+    "repository" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "IssueTrackerConfig_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Ticket" (
+    "id" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "externalId" TEXT NOT NULL,
+    "externalUrl" TEXT,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL,
+    "issueType" TEXT,
+    "storyPoints" INTEGER,
+    "assigneeId" TEXT,
+    "sprintId" TEXT,
+    "labels" TEXT[],
+    "metadata" JSONB NOT NULL DEFAULT '{}',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Ticket_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Sprint" (
+    "id" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "externalId" TEXT,
+    "name" TEXT NOT NULL,
+    "startDate" TIMESTAMP(3),
+    "endDate" TIMESTAMP(3),
+    "status" TEXT NOT NULL DEFAULT 'future',
+    "goal" TEXT,
+    "tokenBudget" INTEGER,
+    "costBudget" DOUBLE PRECISION,
+    "tokenBudgetAlertThreshold" INTEGER DEFAULT 80,
+    "costBudgetAlertThreshold" INTEGER DEFAULT 80,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Sprint_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Invite" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'member',
+    "email" TEXT,
+    "createdById" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "acceptedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Invite_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Event" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "eventType" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
+    "source" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "ticketId" TEXT,
+    "sessionId" TEXT,
+    "traceId" TEXT,
+    "spanId" TEXT,
+    "parentSpanId" TEXT,
+    "payload" JSONB NOT NULL,
+    "metadata" JSONB NOT NULL DEFAULT '{}',
+    "associationMethod" TEXT,
+    "associationConfidence" DOUBLE PRECISION,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ApiKey" (
+    "id" TEXT NOT NULL,
+    "publicKey" TEXT NOT NULL,
+    "hashedSecretKey" TEXT NOT NULL,
+    "fastHashedSecretKey" TEXT NOT NULL,
+    "displaySecretKey" TEXT NOT NULL,
+    "note" TEXT,
+    "scope" TEXT NOT NULL DEFAULT 'workspace',
+    "workspaceId" TEXT NOT NULL,
+    "projectId" TEXT,
+    "userId" TEXT NOT NULL,
+    "rateLimitWindow" INTEGER,
+    "rateLimitCount" INTEGER,
+    "expiresAt" TIMESTAMP(3),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "lastUsedAt" TIMESTAMP(3),
+    "revokedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ApiKey_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Session" (
+    "id" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "ticketId" TEXT,
+    "ticketKey" TEXT,
+    "source" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "branch" TEXT,
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "endedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Workspace_slug_key" ON "Workspace"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Project_workspaceId_slug_key" ON "Project"("workspaceId", "slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_workspaceId_email_key" ON "User"("workspaceId", "email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TeamMember_projectId_userId_key" ON "TeamMember"("projectId", "userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "IssueTrackerConfig_projectId_key" ON "IssueTrackerConfig"("projectId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Ticket_projectId_externalId_key" ON "Ticket"("projectId", "externalId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Sprint_projectId_externalId_key" ON "Sprint"("projectId", "externalId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invite_token_key" ON "Invite"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Event_eventId_key" ON "Event"("eventId");
+
+-- CreateIndex
+CREATE INDEX "Event_projectId_ticketId_idx" ON "Event"("projectId", "ticketId");
+
+-- CreateIndex
+CREATE INDEX "Event_projectId_timestamp_idx" ON "Event"("projectId", "timestamp");
+
+-- CreateIndex
+CREATE INDEX "Event_traceId_idx" ON "Event"("traceId");
+
+-- CreateIndex
+CREATE INDEX "Event_sessionId_idx" ON "Event"("sessionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ApiKey_publicKey_key" ON "ApiKey"("publicKey");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ApiKey_hashedSecretKey_key" ON "ApiKey"("hashedSecretKey");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ApiKey_fastHashedSecretKey_key" ON "ApiKey"("fastHashedSecretKey");
+
+-- CreateIndex
+CREATE INDEX "ApiKey_workspaceId_idx" ON "ApiKey"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "ApiKey_userId_idx" ON "ApiKey"("userId");
+
+-- CreateIndex
+CREATE INDEX "Session_workspaceId_idx" ON "Session"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "Session_projectId_status_idx" ON "Session"("projectId", "status");
+
+-- CreateIndex
+CREATE INDEX "Session_userId_idx" ON "Session"("userId");
+
+-- AddForeignKey
+ALTER TABLE "Project" ADD CONSTRAINT "Project_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "IssueTrackerConfig" ADD CONSTRAINT "IssueTrackerConfig_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_sprintId_fkey" FOREIGN KEY ("sprintId") REFERENCES "Sprint"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Sprint" ADD CONSTRAINT "Sprint_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invite" ADD CONSTRAINT "Invite_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invite" ADD CONSTRAINT "Invite_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invite" ADD CONSTRAINT "Invite_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "Session"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
