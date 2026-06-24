@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card.js";
 import { Select } from "../components/ui/select.js";
 import { Skeleton } from "../components/ui/skeleton.js";
+import { Button } from "../components/ui/button.js";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table.js";
 import { SprintSummary } from "../hooks/use-project-data.js";
 import { useDevelopers } from "../hooks/use-developers.js";
 import { useTrends, type TrendBucket } from "../hooks/use-trends.js";
+import { useAuth } from "../context/auth.js";
+import { downloadCsv } from "../lib/download.js";
 import { TrendChart } from "../components/TrendChart.js";
-import { Coins, Clock, Ticket, Activity, BarChart3, FolderKanban, Users, LineChart } from "lucide-react";
+import { Coins, Clock, Ticket, Activity, BarChart3, FolderKanban, Users, LineChart, Download } from "lucide-react";
 
 export function DashboardPage({
   projectId,
@@ -181,14 +184,31 @@ function UsageTrends({ projectId, sprintId }: { projectId: string; sprintId: str
 
 function DeveloperBreakdown({ projectId, sprintId }: { projectId: string; sprintId: string | null }) {
   const { developers, loading, error } = useDevelopers(projectId, sprintId);
+  const { token } = useAuth();
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ projectId });
+      if (sprintId) params.set("sprintId", sprintId);
+      await downloadCsv(`/api/v1/analytics/export/developers?${params}`, "developers.csv", token);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-muted-foreground" />
           By developer
         </CardTitle>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting || developers.length === 0}>
+          <Download className="mr-2 h-4 w-4" />
+          {exporting ? "Exporting…" : "Export CSV"}
+        </Button>
       </CardHeader>
       <CardContent>
         {error ? (
