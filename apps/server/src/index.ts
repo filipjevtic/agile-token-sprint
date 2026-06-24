@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import { config } from "./config.js";
 import { registerEventRoutes } from "./routes/events.js";
 import { registerHealthRoutes } from "./routes/health.js";
@@ -38,6 +39,18 @@ app.addContentTypeParser(
 );
 
 await app.register(cors, { origin: true });
+
+// Global per-IP rate limit. Routes can tighten/loosen this via their
+// `config.rateLimit` option (see auth and events). Health checks are exempt so
+// liveness/readiness probes are never throttled.
+if (config.rateLimit.enabled) {
+  await app.register(rateLimit, {
+    global: true,
+    max: config.rateLimit.max,
+    timeWindow: config.rateLimit.timeWindow,
+    allowList: (req) => req.url.startsWith("/health"),
+  });
+}
 
 await app.register(registerHealthRoutes, { prefix: "/health" });
 await app.register(registerEventRoutes, { prefix: "/api/v1/events" });

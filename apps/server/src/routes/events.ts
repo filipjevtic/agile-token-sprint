@@ -19,7 +19,9 @@ export async function registerEventRoutes(
 ) {
   const prisma = await getPrisma();
 
-  app.post("/ingest", async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post("/ingest", {
+    config: { rateLimit: { max: config.rateLimit.ingestMax, timeWindow: config.rateLimit.timeWindow } },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     const authHeader = request.headers.authorization;
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (!token) {

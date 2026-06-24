@@ -14,6 +14,18 @@ export const config = {
   // webhooks must present a valid GitHub HMAC signature, GitLab token, or
   // generic bearer token. When empty, verification is skipped (dev default).
   ciWebhookSecret: process.env.CI_WEBHOOK_SECRET || "",
+  // Per-IP rate limiting (in-memory). A global default protects every route;
+  // auth endpoints get a tighter limit to slow credential stuffing, while the
+  // ingest endpoint gets a higher ceiling for high-volume collector traffic.
+  // Set RATE_LIMIT_DISABLED=true to turn limiting off (e.g. behind your own
+  // gateway). For multi-instance deployments, front this with a shared store.
+  rateLimit: {
+    enabled: process.env.RATE_LIMIT_DISABLED !== "true",
+    max: Number(process.env.RATE_LIMIT_MAX || "300"),
+    timeWindow: process.env.RATE_LIMIT_WINDOW || "1 minute",
+    authMax: Number(process.env.RATE_LIMIT_AUTH_MAX || "10"),
+    ingestMax: Number(process.env.RATE_LIMIT_INGEST_MAX || "600"),
+  },
   oauth: {
     github: {
       clientId: process.env.GITHUB_CLIENT_ID || "",

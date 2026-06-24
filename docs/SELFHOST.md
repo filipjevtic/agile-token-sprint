@@ -84,6 +84,18 @@ Collectors (proxy, CLI, MCP, IDE) authenticate to the ingest API. There are two 
   ```
 - **`CI_WEBHOOK_SECRET`** — shared secret used to verify inbound CI webhooks (GitHub HMAC, GitLab token, or generic bearer). If unset, webhook verification is skipped and a warning is logged — set it whenever you expose the CI webhook endpoint.
 
+### Rate limiting
+
+The server applies an in-memory, per-IP rate limit to every route. Health checks are exempt. Tune via environment variables (all optional):
+
+- **`RATE_LIMIT_DISABLED`** — set to `true` to turn limiting off (e.g. when you rate-limit at your gateway). Default: enabled.
+- **`RATE_LIMIT_MAX`** — global requests allowed per window. Default: `300`.
+- **`RATE_LIMIT_WINDOW`** — the window, e.g. `1 minute`, `15 seconds`. Default: `1 minute`.
+- **`RATE_LIMIT_AUTH_MAX`** — tighter limit for `/api/v1/auth/login` and `/api/v1/auth/setup` to slow credential stuffing. Default: `10`.
+- **`RATE_LIMIT_INGEST_MAX`** — higher ceiling for `/api/v1/events/ingest` (high-volume collector traffic). Default: `600`.
+
+The limiter is per-instance. For multi-instance deployments, front it with a shared store (e.g. Redis) or rely on your load balancer/gateway.
+
 ## Reverse proxy / HTTPS
 
 Put the web dashboard and server behind Nginx, Caddy, or Traefik. Set the following:
@@ -101,6 +113,7 @@ Put the web dashboard and server behind Nginx, Caddy, or Traefik. Set the follow
 - Restrict network access to the proxy (it forwards to your LLM provider)
 - Set `BURNWISE_ENCRYPTION_KEY` so issue-tracker tokens and API-key secrets are encrypted at rest
 - Set `CI_WEBHOOK_SECRET` to verify inbound CI webhooks
+- Tune `RATE_LIMIT_*` (especially `RATE_LIMIT_AUTH_MAX`) for your traffic, or disable and enforce limits at your gateway
 - Issue per-developer personal API keys instead of sharing `INGEST_API_KEY`
 - The first user to complete the setup wizard becomes the workspace admin
 
