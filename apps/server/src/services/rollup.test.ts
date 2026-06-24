@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { rollupEvents, rollupBy, emptyRollup } from "./rollup.js";
+import { rollupEvents, rollupBy, emptyRollup, aggregateByDeveloper } from "./rollup.js";
 
 describe("rollupEvents", () => {
   it("returns an empty rollup for no events", () => {
@@ -69,5 +69,40 @@ describe("rollupBy", () => {
       (e) => e.sessionId
     );
     assert.strictEqual(groups.size, 0);
+  });
+});
+
+describe("aggregateByDeveloper", () => {
+  it("rolls up per developer with distinct session/ticket counts", () => {
+    const result = aggregateByDeveloper([
+      { userId: "a", eventType: "llm.response", payload: { totalTokens: 100, costUsd: 1 }, sessionId: "s1", ticketId: "t1" },
+      { userId: "a", eventType: "session.activity", payload: { durationSeconds: 60 }, sessionId: "s1", ticketId: "t1" },
+      { userId: "a", eventType: "llm.response", payload: { totalTokens: 50 }, sessionId: "s2", ticketId: "t2" },
+      { userId: "b", eventType: "llm.response", payload: { totalTokens: 10 }, sessionId: "s3", ticketId: "t1" },
+    ]);
+
+    const a = result.find((d) => d.userId === "a")!;
+    assert.strictEqual(a.tokens, 150);
+    assert.strictEqual(a.cost, 1);
+    assert.strictEqual(a.durationSeconds, 60);
+    assert.strictEqual(a.eventCount, 3);
+    assert.strictEqual(a.sessionCount, 2);
+    assert.strictEqual(a.ticketCount, 2);
+  });
+
+  it("sorts developers by tokens descending", () => {
+    const result = aggregateByDeveloper([
+      { userId: "low", eventType: "llm.response", payload: { totalTokens: 5 } },
+      { userId: "high", eventType: "llm.response", payload: { totalTokens: 500 } },
+    ]);
+    assert.deepStrictEqual(result.map((d) => d.userId), ["high", "low"]);
+  });
+
+  it("does not count null session/ticket ids", () => {
+    const result = aggregateByDeveloper([
+      { userId: "a", eventType: "llm.response", payload: { totalTokens: 1 }, sessionId: null, ticketId: null },
+    ]);
+    assert.strictEqual(result[0].sessionCount, 0);
+    assert.strictEqual(result[0].ticketCount, 0);
   });
 });
