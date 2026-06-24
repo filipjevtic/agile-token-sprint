@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyRepl
 import { getPrisma } from "../db.js";
 import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace, assertSprintInWorkspace } from "../middleware/scope.js";
+import { rollupEvents } from "../services/rollup.js";
 
 export async function registerSprintRoutes(
   app: FastifyInstance,
@@ -41,33 +42,19 @@ export async function registerSprintRoutes(
     const ticketSummaries = [];
 
     for (const ticket of sprint.tickets) {
-      let ticketTokens = 0;
-      let ticketCost = 0;
-      let ticketDuration = 0;
+      const rollup = rollupEvents(ticket.events);
 
-      for (const event of ticket.events) {
-        const payload = event.payload as Record<string, unknown>;
-        if (event.eventType === "llm.response") {
-          ticketTokens += (payload.totalTokens as number) || 0;
-          ticketCost += (payload.costUsd as number) || 0;
-        } else if (event.eventType === "session.activity") {
-          ticketDuration += (payload.durationSeconds as number) || 0;
-        } else if (event.eventType === "ci.run") {
-          ticketCost += (payload.costUsd as number) || 0;
-        }
-      }
-
-      totalTokens += ticketTokens;
-      totalCost += ticketCost;
-      totalDuration += ticketDuration;
+      totalTokens += rollup.tokens;
+      totalCost += rollup.cost;
+      totalDuration += rollup.durationSeconds;
 
       ticketSummaries.push({
         ticketId: ticket.id,
         externalId: ticket.externalId,
         title: ticket.title,
-        tokens: ticketTokens,
-        cost: ticketCost,
-        durationSeconds: ticketDuration,
+        tokens: rollup.tokens,
+        cost: rollup.cost,
+        durationSeconds: rollup.durationSeconds,
         events: ticket.events.length,
       });
     }

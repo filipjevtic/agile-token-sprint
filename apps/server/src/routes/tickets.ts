@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyRepl
 import { getPrisma } from "../db.js";
 import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace, assertTicketInWorkspace } from "../middleware/scope.js";
+import { rollupEvents } from "../services/rollup.js";
 
 export async function registerTicketRoutes(
   app: FastifyInstance,
@@ -32,21 +33,7 @@ export async function registerTicketRoutes(
       return reply.status(404).send({ error: "Ticket not found" });
     }
 
-    let totalTokens = 0;
-    let totalCost = 0;
-    let totalDuration = 0;
-
-    for (const event of ticket.events) {
-      const payload = event.payload as Record<string, unknown>;
-      if (event.eventType === "llm.response") {
-        totalTokens += (payload.totalTokens as number) || 0;
-        totalCost += (payload.costUsd as number) || 0;
-      } else if (event.eventType === "session.activity") {
-        totalDuration += (payload.durationSeconds as number) || 0;
-      } else if (event.eventType === "ci.run") {
-        totalCost += (payload.costUsd as number) || 0;
-      }
-    }
+    const rollup = rollupEvents(ticket.events);
 
     return {
       ticket: {
@@ -57,10 +44,10 @@ export async function registerTicketRoutes(
         storyPoints: ticket.storyPoints,
       },
       summary: {
-        totalTokens,
-        totalCost,
-        totalDurationSeconds: totalDuration,
-        eventCount: ticket.events.length,
+        totalTokens: rollup.tokens,
+        totalCost: rollup.cost,
+        totalDurationSeconds: rollup.durationSeconds,
+        eventCount: rollup.eventCount,
       },
     };
   });

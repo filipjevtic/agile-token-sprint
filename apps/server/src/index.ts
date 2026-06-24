@@ -16,6 +16,7 @@ import { registerOAuthRoutes } from "./routes/oauth.js";
 import { registerInviteRoutes } from "./routes/invites.js";
 import { registerKeyRoutes } from "./routes/keys.js";
 import { registerSessionRoutes } from "./routes/sessions.js";
+import { registerAnalyticsRoutes } from "./routes/analytics.js";
 
 const app = Fastify({
   logger: true,
@@ -53,6 +54,7 @@ await app.register(registerOAuthRoutes, { prefix: "/api/v1/auth/oauth" });
 await app.register(registerInviteRoutes, { prefix: "/api/v1/invites" });
 await app.register(registerKeyRoutes, { prefix: "/api/v1/keys" });
 await app.register(registerSessionRoutes, { prefix: "/api/v1/sessions" });
+await app.register(registerAnalyticsRoutes, { prefix: "/api/v1/analytics" });
 
 try {
   await app.listen({ port: config.port, host: "0.0.0.0" });
