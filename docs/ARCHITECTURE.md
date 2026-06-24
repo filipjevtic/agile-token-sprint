@@ -29,9 +29,10 @@ flowchart TB
 
     subgraph Frontend["apps/web React Dashboard"]
         L[Dashboard]
-        M[Forecast & CI]
-        N[Integrations]
-        O[Settings & Team]
+        M[Velocity & Efficiency]
+        N[Sessions & Traces]
+        O[Forecast & Capacity]
+        P2[Integrations & Settings]
     end
 
     subgraph Data["Data"]
@@ -66,25 +67,41 @@ flowchart TB
 erDiagram
     Workspace ||--o{ Project : has
     Workspace ||--o{ User : has
+    Workspace ||--o{ ApiKey : has
+    Workspace ||--o{ Session : has
     Project ||--o{ Ticket : has
     Project ||--o{ Sprint : has
     Project ||--o{ Event : has
+    Project ||--o{ Session : has
     Project ||--o{ TeamMember : has
     Project ||--o| IssueTrackerConfig : has
     Sprint ||--o{ Ticket : contains
     User ||--o{ Event : emits
+    User ||--o{ Session : owns
+    User ||--o{ ApiKey : owns
     User ||--o{ TeamMember : belongs
     Ticket ||--o{ Event : linked
+    Ticket ||--o{ Session : worked
+    Session ||--o{ Event : groups
     TeamMember }o--|| User : member
 ```
 
 ## Event Flow
 
-1. Collectors emit events (IDE, proxy, CLI, CI)
-2. Ingestion API validates the batch schema
-3. Association service links events to tickets by explicit ID, prompt text, or git context
-4. Events are persisted in PostgreSQL
-5. Dashboard queries aggregated summaries per ticket, sprint, and project
+1. A developer starts a **session** bound to a ticket (CLI `ats start`, MCP `set_ticket`, IDE, or git branch).
+2. Collectors emit events (IDE, proxy, CLI, CI), authenticated with a personal **API key** (`bw_sk_...`) so the real user and workspace are resolved server-side.
+3. The ingestion API validates the batch schema.
+4. The association service links each event to a ticket by precedence: explicit session/header ticket > git branch convention > prompt/metadata extraction.
+5. Events are persisted in PostgreSQL, grouped under their session.
+6. The dashboard derives velocity (committed vs completed points), efficiency (effort per completed point), session/trace rollups, and a velocity-based capacity recommendation — all from the shared event-rollup math.
+
+## Sprint-planning analytics
+
+All analytics share one event-rollup helper so ticket, sprint, session, and developer summaries stay consistent:
+
+- **Velocity** — committed vs completed story points, completion rate (estimate accuracy), and a trailing rolling average per sprint.
+- **Efficiency** — cost / tokens / agent-time per completed story point, trended across sprints.
+- **Capacity recommendation** — an anomaly-aware estimate (median ± 1 stddev of clean completed-points history) for the next sprint.
 
 ## Integration Flow
 
@@ -122,6 +139,7 @@ sequenceDiagram
 | Proxy | `apps/proxy` | Forward LLM calls, emit events |
 | CLI | `apps/cli` | Wrap commands, emit session activity |
 | VS Code extension | `apps/vscode` | IDE collector |
+| MCP server | `apps/mcp` | Ticket binding + activity for Claude Code / MCP clients |
 | Schema | `packages/schema` | Zod event schemas |
 
 ## Deployment

@@ -7,16 +7,20 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fburnwise-blue?logo=github)](https://github.com/filipjevtic/burnwise)
 
-Self-hosted, open-source platform that turns AI usage into a first-class sprint-planning signal. Capture LLM tokens, traces, CI costs, and coding time from IDEs, API proxies, and CLI tools; associate them with Jira / GitHub / GitLab tickets; and forecast realistic workload, budget, and scope.
+**The agile observability layer for AI-assisted engineering.** AI coding agents make individual developers faster, but sprint planning is still a guessing game built on pre-AI baselines. Burnwise is a self-hosted, open-source platform that ties LLM tokens, traces, CI cost, and coding time to your Jira / GitHub / GitLab tickets — so you can calibrate story points against *actual* AI-assisted effort and plan sprints with confidence instead of guesswork.
+
+> A 3-point ticket used to mean two days of work. With an AI agent it might mean two hours and 100k tokens. Burnwise connects those two data points.
 
 ## What Burnwise does
 
-- [x] **Capture effort signals** from IDE plugins, API proxies, CLI wrappers, and CI/CD pipelines.
-- [x] **Associate events to tickets** by explicit ticket ID, prompt text, git branch, or commit message.
+- [x] **Measure velocity** — committed vs completed story points, completion rate (estimate accuracy), and a rolling average per sprint.
+- [x] **Track efficiency** — AI effort (cost, tokens, agent time) per completed story point, trended over sprints.
+- [x] **Recommend sprint capacity** — an anomaly-aware, velocity-based estimate of how many points to commit next sprint.
+- [x] **Attribute work to tickets** — explicit ticket ID, session headers, git branch, prompt text, or commit message.
+- [x] **Drill into sessions & traces** — per-developer agent sessions with token/cost/time rollups and a timeline.
 - [x] **Sync issue trackers** — GitHub Issues, Jira, and GitLab Issues become sprints and tickets.
-- [x] **Forecast sprint capacity** from historical tokens, cost, and duration per story point.
 - [x] **Track budgets and alerts** for tokens, cost, and CI spend per project and sprint.
-- [x] **Manage teams and roles** — admin and member access control on every route.
+- [x] **Manage teams and roles** with personal API keys, workspace scoping, and encrypted secrets.
 - [x] **First-run setup wizard** — no seed data; create your workspace and admin account on first visit.
 - [x] **Self-host in one command** with Docker Compose.
 
@@ -37,7 +41,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Open http://localhost:8080. On first visit the **setup wizard** walks you through creating your workspace and admin account. Optionally load demo data from the dashboard once logged in.
+Open http://localhost:8080. On first visit the **setup wizard** walks you through creating your workspace and admin account, then connect an issue tracker on the **Integrations** page to import sprints and tickets.
 
 ### Local development
 
@@ -60,6 +64,29 @@ npm run dev --workspace=apps/web
 Dashboard: http://localhost:5173 · API: http://localhost:3000 · Proxy: http://localhost:4000
 
 For production deployment, see [docs/SELFHOST.md](docs/SELFHOST.md).
+
+## Connect your AI workflow
+
+After setup, generate a personal API key in **Settings → API Keys** (`bw_sk_...`) and bind your agent work to a ticket. Whatever tool you use, the strongest available signal wins (explicit ticket > git branch > prompt text). See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for copy-paste setup.
+
+```bash
+# CLI — start a session bound to a ticket, then run your agent
+export ATS_API_KEY=bw_sk_...        # personal key from Settings → API Keys
+export ATS_PROJECT_ID=...           # your project id
+ats start PROJ-123
+ats -- claude code "refactor the login flow"
+ats stop
+```
+
+```bash
+# Proxy — point any OpenAI-compatible client at Burnwise and tag the ticket
+export OPENAI_BASE_URL=http://localhost:4000/v1
+curl $OPENAI_BASE_URL/chat/completions \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "X-Burnwise-Key: bw_sk_..." \
+  -H "X-Burnwise-Ticket: PROJ-123" \
+  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"hi"}]}'
+```
 
 ## Architecture
 
@@ -86,11 +113,11 @@ flowchart TB
     end
 
     subgraph Frontend["apps/web React Dashboard"]
-        M[Login / Setup]
-        N[Dashboard]
-        O[Forecast & CI]
-        P[Integrations]
-        Q[Settings & Team]
+        M[Dashboard]
+        N[Velocity & Efficiency]
+        O[Sessions & Traces]
+        P[Forecast & Capacity]
+        Q[Integrations / Settings]
     end
 
     subgraph Data
@@ -128,8 +155,17 @@ For detailed diagrams and data model, see [docs/ARCHITECTURE.md](docs/ARCHITECTU
 | `apps/vscode` | VS Code extension collector |
 | `apps/mcp` | MCP server for Claude Code and other MCP clients |
 | `packages/schema` | Zod event schemas shared across apps |
-| `docs/` | Architecture and self-hosting documentation |
+| `docs/` | Architecture, self-hosting, user stories, and integration docs |
 | `docker-compose.yml` | One-command local stack |
+
+## Documentation
+
+| Doc | Contents |
+|-----|----------|
+| [docs/USER_STORIES.md](docs/USER_STORIES.md) | Personas and the end-to-end loops Burnwise serves |
+| [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) | Copy-paste setup for CLI, proxy, MCP, and IDE collectors |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagrams, data model, and event flow |
+| [docs/SELFHOST.md](docs/SELFHOST.md) | Production deployment, SSO, API keys, and secrets |
 
 ## Environment variables
 
@@ -138,7 +174,9 @@ For detailed diagrams and data model, see [docs/ARCHITECTURE.md](docs/ARCHITECTU
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
 | `JWT_SECRET` | ✅ | Secret used to sign auth tokens — use a long random string in production |
 | `JWT_EXPIRY` | | Token lifetime (default: `7d`) |
-| `INGEST_API_KEY` | ✅ | API key used by collectors to ingest events |
+| `INGEST_API_KEY` | ✅ | Shared fallback ingest key. Prefer per-developer personal keys (`bw_sk_...`) from Settings → API Keys so events bind to the real user |
+| `BURNWISE_ENCRYPTION_KEY` | | 32-byte hex key to encrypt secrets at rest (integration tokens, API-key secrets). Derived from `JWT_SECRET` if unset — set explicitly in production |
+| `CI_WEBHOOK_SECRET` | | Shared secret to verify inbound CI webhooks (GitHub HMAC / GitLab token / generic bearer). Verification is skipped with a warning if unset |
 | `PORT` | | Server port (default: `3000`) |
 | `VITE_API_URL` | | URL the browser uses to reach the server (default: `http://localhost:3000`) |
 
@@ -150,11 +188,15 @@ See `.env.example` for the full list including proxy and collector variables.
 # Type-check everything
 npm run typecheck --workspaces
 
+# Lint everything
+npm run lint
+
 # Build everything
 npm run build --workspaces
 
-# Run unit tests
+# Run unit tests (schema, server, proxy, cli)
 npm run test --workspace=packages/schema
+npm run test --workspace=apps/server
 
 # Run E2E tests (requires server + web to be running, or uses webServer config)
 npm run e2e --workspace=apps/web
@@ -165,7 +207,7 @@ npm run e2e:ui --workspace=apps/web
 
 ### First run (local dev)
 
-After `npm run dev` starts the server and web app, open http://localhost:5173. The **setup wizard** will prompt you to create a workspace name and admin account. No seed data is loaded automatically — use the **"Explore with demo data"** button on the empty project screen to load sample sprints, tickets, and LLM events.
+After `npm run dev` starts the server and web app, open http://localhost:5173. The **setup wizard** prompts you to create a workspace name and admin account. No seed data is loaded — connect an issue tracker on the **Integrations** page to import real sprints and tickets, then bind agent work to a ticket (see [Connect your AI workflow](#connect-your-ai-workflow)).
 
 ## Contributing
 

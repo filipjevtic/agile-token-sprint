@@ -26,7 +26,7 @@ docker compose up -d
 open http://localhost:8080
 ```
 
-On first visit, the **setup wizard** will appear. Enter your workspace name, email, and password to create the admin account. The database starts empty — use the **"Explore with demo data"** button after login to load sample sprints, tickets, and LLM events.
+On first visit, the **setup wizard** will appear. Enter your workspace name, email, and password to create the admin account. The database starts empty — connect an issue tracker on the **Integrations** page to import real sprints and tickets, then bind agent work to a ticket (see [INTEGRATIONS.md](INTEGRATIONS.md)).
 
 ## Option 2: External PostgreSQL
 
@@ -67,6 +67,23 @@ Burnwise supports GitHub and Google OAuth out of the box. Both are optional — 
 
 SSO users are automatically created on first sign-in with the `member` role. Promote them to admin via **Settings → Team** after they sign in.
 
+You can mix providers: for example, let developers sign in with **GitHub** while admins use **Google** — both are enabled independently and email/password remains available as a fallback.
+
+## API keys for collectors
+
+Collectors (proxy, CLI, MCP, IDE) authenticate to the ingest API. There are two options:
+
+- **Personal API keys (recommended).** Each developer generates a key in **Settings → API Keys** (`bw_pk_...` public + `bw_sk_...` secret). The secret is shown once; store it as `ATS_API_KEY` / `X-Burnwise-Key`. Events authenticated with a personal key bind to the **real developer and workspace** server-side, so per-developer velocity and capacity are accurate. Keys can be revoked, rotated, and given per-key rate limits and expiry.
+- **Shared ingest key (fallback).** `INGEST_API_KEY` is a single shared key suitable for CI or bootstrapping. Events carry whatever `userId` the client sends, so prefer personal keys for developer attribution.
+
+## Secrets at rest
+
+- **`BURNWISE_ENCRYPTION_KEY`** — a 32-byte hex value used to encrypt sensitive data at rest (issue-tracker API tokens, API-key secrets) with AES-GCM. If unset, the server derives a key from `JWT_SECRET` (acceptable for dev). **Set this explicitly in production**, and note that rotating it invalidates previously encrypted secrets.
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ```
+- **`CI_WEBHOOK_SECRET`** — shared secret used to verify inbound CI webhooks (GitHub HMAC, GitLab token, or generic bearer). If unset, webhook verification is skipped and a warning is logged — set it whenever you expose the CI webhook endpoint.
+
 ## Reverse proxy / HTTPS
 
 Put the web dashboard and server behind Nginx, Caddy, or Traefik. Set the following:
@@ -82,7 +99,9 @@ Put the web dashboard and server behind Nginx, Caddy, or Traefik. Set the follow
 - Use a strong PostgreSQL password
 - Run the server behind HTTPS in production
 - Restrict network access to the proxy (it forwards to your LLM provider)
-- Store issue tracker tokens securely (they are saved in the database)
+- Set `BURNWISE_ENCRYPTION_KEY` so issue-tracker tokens and API-key secrets are encrypted at rest
+- Set `CI_WEBHOOK_SECRET` to verify inbound CI webhooks
+- Issue per-developer personal API keys instead of sharing `INGEST_API_KEY`
 - The first user to complete the setup wizard becomes the workspace admin
 
 ## Backups
@@ -112,7 +131,11 @@ npm run db:migrate --workspace=apps/server
 
 **No tickets appear in the dashboard**
 - Sync from GitHub, Jira, or GitLab using the Integrations page in the dashboard
-- Or use the "Explore with demo data" button on the empty project screen
+- Ensure the synced sprints contain tickets with story points so velocity and forecast have data
+
+**No velocity / capacity data**
+- Velocity needs sprints whose tickets have story points and a terminal status (done/closed/completed/resolved)
+- Capacity recommendations need at least one completed sprint of story points
 
 **Proxy returns 401 on ingest**
 - Verify `INGEST_API_KEY` on the proxy matches `INGEST_API_KEY` on the server
