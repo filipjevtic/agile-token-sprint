@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyRepl
 import { getPrisma } from "../db.js";
 import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace } from "../middleware/scope.js";
-import { rollupEvents } from "../services/rollup.js";
+import { rollupEvents, aggregateByDeveloper } from "../services/rollup.js";
 
 /**
  * Dashboard-facing analytics. These endpoints are JWT-authenticated (browser)
@@ -67,6 +67,51 @@ export async function registerAnalyticsRoutes(
         };
       }),
     };
+  });
+
+  // Per-developer usage rollups for a project (optionally a sprint).
+  app.get<{
+    Querystring: { projectId?: string; sprintId?: string };
+  }>("/developers", { preHandler: requireAuth }, async (request, reply) => {
+    const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
+    const { projectId, sprintId } = request.query;
+    if (!projectId) {
+      return reply.status(400).send({ error: "projectId is required" });
+    }
+    if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
+
+    const events = await prisma.event.findMany({
+      where: {
+        projectId,
+        ...(sprintId ? { ticket: { sprintId } } : {}),
+      },
+      select: { userId: true, eventType: true, payload: true, sessionId: true, ticketId: true },
+    });
+
+    const aggregates = aggregateByDeveloper(events);
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: aggregates.map((a) => a.userId) } },
+      select: { id: true, email: true, displayName: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const developers = aggregates.map((agg) => {
+      const u = userMap.get(agg.userId);
+      return {
+        userId: agg.userId,
+        name: u ? u.displayName || u.email : agg.userId,
+        email: u?.email ?? null,
+        tokens: agg.tokens,
+        cost: agg.cost,
+        durationSeconds: agg.durationSeconds,
+        eventCount: agg.eventCount,
+        sessionCount: agg.sessionCount,
+        ticketCount: agg.ticketCount,
+      };
+    });
+
+    return { developers };
   });
 
   // Session detail with its events and a rollup.
