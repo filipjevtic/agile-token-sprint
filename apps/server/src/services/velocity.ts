@@ -7,6 +7,8 @@
  * Pure functions only — no Prisma — so the math is unit-testable in isolation.
  */
 
+import { meanStddev, detectHighOutliers } from "./anomaly.js";
+
 export interface SprintTicketInput {
   status: string;
   storyPoints: number | null;
@@ -37,6 +39,19 @@ export interface SprintVelocity {
   rollingAveragePoints: number;
 }
 
+export interface CapacityRecommendation {
+  /** Robust point estimate for next-sprint capacity (median of clean history). */
+  recommendedPoints: number;
+  mean: number;
+  median: number;
+  /** Lower/upper planning band (mean ± 1 stddev of clean history, floored at 0). */
+  low: number;
+  high: number;
+  /** Number of sprints used after dropping high outliers. */
+  sampleSize: number;
+  confidence: "low" | "medium" | "high";
+}
+
 export interface VelocitySummary {
   sprints: SprintVelocity[];
   /** Mean completed points across sprints with any committed work. */
@@ -45,6 +60,8 @@ export interface VelocitySummary {
   averageCompletionRate: number;
   /** Most recent sprint's rolling average, the headline planning number. */
   latestRollingAveragePoints: number;
+  /** Velocity-based recommendation for how many points to commit next sprint. */
+  capacity: CapacityRecommendation;
 }
 
 const DONE_STATUSES = new Set(["done", "closed", "completed", "resolved"]);
@@ -123,7 +140,44 @@ export function computeVelocity(
     averageCompletionRate: round(averageCompletionRate),
     latestRollingAveragePoints:
       result.length > 0 ? result[result.length - 1].rollingAveragePoints : 0,
+    capacity: recommendCapacity(scored.map((s) => s.completedPoints)),
   };
+}
+
+/**
+ * Recommend next-sprint capacity from completed-points history. Anomaly-aware:
+ * high outliers (a freakishly large sprint) are dropped before computing the
+ * estimate so they don't inflate the plan. Uses the median as the headline
+ * (robust) and a mean ± 1 stddev band for the range.
+ */
+export function recommendCapacity(completedHistory: number[]): CapacityRecommendation {
+  if (completedHistory.length === 0) {
+    return { recommendedPoints: 0, mean: 0, median: 0, low: 0, high: 0, sampleSize: 0, confidence: "low" };
+  }
+
+  const outliers = detectHighOutliers(completedHistory);
+  const clean = completedHistory.filter((_, i) => !outliers[i]);
+  const sample = clean.length > 0 ? clean : completedHistory;
+
+  const { mean, stddev } = meanStddev(sample);
+  const median = computeMedian(sample);
+  const confidence = sample.length < 3 ? "low" : sample.length < 6 ? "medium" : "high";
+
+  return {
+    recommendedPoints: Math.round(median),
+    mean: round(mean),
+    median: round(median),
+    low: round(Math.max(0, mean - stddev)),
+    high: round(mean + stddev),
+    sampleSize: sample.length,
+    confidence,
+  };
+}
+
+function computeMedian(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
 function round(value: number): number {
