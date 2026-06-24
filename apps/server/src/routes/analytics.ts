@@ -4,6 +4,7 @@ import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace } from "../middleware/scope.js";
 import { rollupEvents, aggregateByDeveloper } from "../services/rollup.js";
 import { bucketEvents, type Bucket } from "../services/trends.js";
+import { toCsv, type CsvColumn } from "../services/csv.js";
 
 /**
  * Dashboard-facing analytics. These endpoints are JWT-authenticated (browser)
@@ -185,4 +186,112 @@ export async function registerAnalyticsRoutes(
       events: session.events,
     };
   });
+
+  // CSV export of session rollups.
+  app.get<{
+    Querystring: { projectId?: string; sprintId?: string };
+  }>("/export/sessions", { preHandler: requireAuth }, async (request, reply) => {
+    const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
+    const { projectId, sprintId } = request.query;
+    if (!projectId) return reply.status(400).send({ error: "projectId is required" });
+    if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
+
+    const sessions = await prisma.session.findMany({
+      where: { projectId, ...(sprintId ? { ticket: { sprintId } } : {}) },
+      orderBy: { startedAt: "desc" },
+      include: {
+        user: { select: { email: true, displayName: true } },
+        ticket: { select: { externalId: true } },
+        events: { select: { eventType: true, payload: true } },
+      },
+    });
+
+    const rows = sessions.map((s) => {
+      const r = rollupEvents(s.events);
+      return {
+        developer: s.user ? s.user.displayName || s.user.email : "",
+        ticket: s.ticket?.externalId || s.ticketKey || "",
+        source: s.source,
+        status: s.status,
+        branch: s.branch || "",
+        startedAt: s.startedAt.toISOString(),
+        endedAt: s.endedAt ? s.endedAt.toISOString() : "",
+        tokens: r.tokens,
+        cost: r.cost,
+        durationSeconds: r.durationSeconds,
+        events: r.eventCount,
+      };
+    });
+
+    const columns: CsvColumn<(typeof rows)[number]>[] = [
+      { header: "Developer", value: (r) => r.developer },
+      { header: "Ticket", value: (r) => r.ticket },
+      { header: "Source", value: (r) => r.source },
+      { header: "Status", value: (r) => r.status },
+      { header: "Branch", value: (r) => r.branch },
+      { header: "Started", value: (r) => r.startedAt },
+      { header: "Ended", value: (r) => r.endedAt },
+      { header: "Tokens", value: (r) => r.tokens },
+      { header: "Cost (USD)", value: (r) => r.cost },
+      { header: "Duration (s)", value: (r) => r.durationSeconds },
+      { header: "Events", value: (r) => r.events },
+    ];
+
+    return sendCsv(reply, "sessions.csv", toCsv(rows, columns));
+  });
+
+  // CSV export of per-developer rollups.
+  app.get<{
+    Querystring: { projectId?: string; sprintId?: string };
+  }>("/export/developers", { preHandler: requireAuth }, async (request, reply) => {
+    const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
+    const { projectId, sprintId } = request.query;
+    if (!projectId) return reply.status(400).send({ error: "projectId is required" });
+    if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
+
+    const events = await prisma.event.findMany({
+      where: { projectId, ...(sprintId ? { ticket: { sprintId } } : {}) },
+      select: { userId: true, eventType: true, payload: true, sessionId: true, ticketId: true },
+    });
+    const aggregates = aggregateByDeveloper(events);
+    const users = await prisma.user.findMany({
+      where: { id: { in: aggregates.map((a) => a.userId) } },
+      select: { id: true, email: true, displayName: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const rows = aggregates.map((a) => {
+      const u = userMap.get(a.userId);
+      return {
+        developer: u ? u.displayName || u.email : a.userId,
+        email: u?.email ?? "",
+        tokens: a.tokens,
+        cost: a.cost,
+        durationSeconds: a.durationSeconds,
+        events: a.eventCount,
+        sessions: a.sessionCount,
+        tickets: a.ticketCount,
+      };
+    });
+
+    const columns: CsvColumn<(typeof rows)[number]>[] = [
+      { header: "Developer", value: (r) => r.developer },
+      { header: "Email", value: (r) => r.email },
+      { header: "Tokens", value: (r) => r.tokens },
+      { header: "Cost (USD)", value: (r) => r.cost },
+      { header: "Duration (s)", value: (r) => r.durationSeconds },
+      { header: "Events", value: (r) => r.events },
+      { header: "Sessions", value: (r) => r.sessions },
+      { header: "Tickets", value: (r) => r.tickets },
+    ];
+
+    return sendCsv(reply, "developers.csv", toCsv(rows, columns));
+  });
+}
+
+function sendCsv(reply: FastifyReply, filename: string, csv: string) {
+  return reply
+    .header("Content-Type", "text/csv; charset=utf-8")
+    .header("Content-Disposition", `attachment; filename="${filename}"`)
+    .send(csv);
 }
