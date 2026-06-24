@@ -1,0 +1,21 @@
+{
+  "all": true,
+  "src": ["dist"],
+  "include": [
+    "dist/services/anomaly.js",
+    "dist/services/csv.js",
+    "dist/services/efficiency.js",
+    "dist/services/rollup.js",
+    "dist/services/trends.js",
+    "dist/services/velocity.js",
+    "dist/lib/crypto.js"
+  ],
+  "exclude": ["**/*.test.js"],
+  "reporter": ["text", "text-summary", "lcov"],
+  "report-dir": "./coverage",
+  "check-coverage": true,
+  "lines": 85,
+  "functions": 85,
+  "statements": 85,
+  "branches": 80
+}
