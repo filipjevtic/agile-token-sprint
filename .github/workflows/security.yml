@@ -42,15 +42,16 @@ jobs:
           sarif_file: trivy-results.sarif
           category: trivy
 
-      # Gate: fail the build only on fixable CRITICAL vulnerabilities. HIGH/MEDIUM
-      # are reported to the Security tab (above) and tracked via Dependabot rather
-      # than hard-blocking every PR on transitive advisories.
-      - name: Trivy gate (fail on fixable CRITICAL)
+      # Gate: fail the build on fixable CRITICAL/HIGH vulnerabilities in
+      # production dependencies. Dev dependencies (build/test tooling) are
+      # excluded by default for npm lockfiles. MEDIUM and below are reported to
+      # the Security tab (above) and tracked via Dependabot.
+      - name: Trivy gate (fail on fixable CRITICAL/HIGH)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scanners: vuln
           format: table
-          severity: CRITICAL
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: '1'
