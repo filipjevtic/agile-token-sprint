@@ -1,0 +1,66 @@
+/**
+ * Shared event-rollup math. Tokens/cost/duration are derived from event
+ * payloads in exactly one place so ticket, sprint, session, and developer
+ * summaries stay consistent.
+ */
+
+export interface RollupEvent {
+  eventType: string;
+  payload: unknown;
+}
+
+export interface Rollup {
+  tokens: number;
+  cost: number;
+  durationSeconds: number;
+  eventCount: number;
+}
+
+export function emptyRollup(): Rollup {
+  return { tokens: 0, cost: 0, durationSeconds: 0, eventCount: 0 };
+}
+
+/** Aggregate a list of events into a single rollup. */
+export function rollupEvents(events: RollupEvent[]): Rollup {
+  const acc = emptyRollup();
+  for (const event of events) {
+    accumulate(acc, event);
+  }
+  return acc;
+}
+
+/** Group events by a key and roll up each group. */
+export function rollupBy<T extends RollupEvent>(
+  events: T[],
+  keyFn: (event: T) => string | null | undefined
+): Map<string, Rollup> {
+  const groups = new Map<string, Rollup>();
+  for (const event of events) {
+    const key = keyFn(event);
+    if (key == null) continue;
+    let group = groups.get(key);
+    if (!group) {
+      group = emptyRollup();
+      groups.set(key, group);
+    }
+    accumulate(group, event);
+  }
+  return groups;
+}
+
+function accumulate(acc: Rollup, event: RollupEvent): void {
+  const payload = (event.payload ?? {}) as Record<string, unknown>;
+  if (event.eventType === "llm.response") {
+    acc.tokens += num(payload.totalTokens);
+    acc.cost += num(payload.costUsd);
+  } else if (event.eventType === "session.activity") {
+    acc.durationSeconds += num(payload.durationSeconds);
+  } else if (event.eventType === "ci.run") {
+    acc.cost += num(payload.costUsd);
+  }
+  acc.eventCount += 1;
+}
+
+function num(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
