@@ -3,6 +3,7 @@ import { getPrisma } from "../db.js";
 import { requireAuth, type AuthPayload } from "../middleware/auth.js";
 import { assertProjectInWorkspace } from "../middleware/scope.js";
 import { rollupEvents, aggregateByDeveloper } from "../services/rollup.js";
+import { bucketEvents, type Bucket } from "../services/trends.js";
 
 /**
  * Dashboard-facing analytics. These endpoints are JWT-authenticated (browser)
@@ -67,6 +68,31 @@ export async function registerAnalyticsRoutes(
         };
       }),
     };
+  });
+
+  // Time-bucketed usage trends for a project (tokens/cost/duration over time).
+  app.get<{
+    Querystring: { projectId?: string; sprintId?: string; bucket?: string };
+  }>("/trends", { preHandler: requireAuth }, async (request, reply) => {
+    const { workspaceId } = (request as FastifyRequest & { user: AuthPayload }).user;
+    const { projectId, sprintId } = request.query;
+    if (!projectId) {
+      return reply.status(400).send({ error: "projectId is required" });
+    }
+    if (!(await assertProjectInWorkspace(prisma, reply, projectId, workspaceId))) return;
+
+    const bucket: Bucket = request.query.bucket === "week" ? "week" : "day";
+
+    const events = await prisma.event.findMany({
+      where: {
+        projectId,
+        ...(sprintId ? { ticket: { sprintId } } : {}),
+      },
+      select: { timestamp: true, eventType: true, payload: true },
+      orderBy: { timestamp: "asc" },
+    });
+
+    return { bucket, points: bucketEvents(events, bucket) };
   });
 
   // Per-developer usage rollups for a project (optionally a sprint).

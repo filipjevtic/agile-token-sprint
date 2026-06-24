@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { rollupEvents } from "./rollup.js";
 
 export interface Alert {
   type: "token" | "cost";
@@ -7,11 +8,6 @@ export interface Alert {
   usagePercent: number;
   budget: number;
   usage: number;
-}
-
-interface EventPayload {
-  totalTokens?: number;
-  costUsd?: number;
 }
 
 export async function getProjectAlerts(
@@ -30,18 +26,7 @@ export async function getProjectAlerts(
     where: { projectId },
   });
 
-  let totalTokens = 0;
-  let totalCost = 0;
-
-  for (const event of events) {
-    const payload = event.payload as EventPayload;
-    if (event.eventType === "llm.response") {
-      totalTokens += payload.totalTokens || 0;
-      totalCost += payload.costUsd || 0;
-    } else if (event.eventType === "ci.run") {
-      totalCost += payload.costUsd || 0;
-    }
-  }
+  const { tokens: totalTokens, cost: totalCost } = rollupEvents(events);
 
   const alerts: Alert[] = [];
 
@@ -91,20 +76,9 @@ export async function getSprintAlerts(
     throw new Error("Sprint not found");
   }
 
-  let totalTokens = 0;
-  let totalCost = 0;
-
-  for (const ticket of sprint.tickets) {
-    for (const event of ticket.events) {
-      const payload = event.payload as EventPayload;
-      if (event.eventType === "llm.response") {
-        totalTokens += payload.totalTokens || 0;
-        totalCost += payload.costUsd || 0;
-      } else if (event.eventType === "ci.run") {
-        totalCost += payload.costUsd || 0;
-      }
-    }
-  }
+  const { tokens: totalTokens, cost: totalCost } = rollupEvents(
+    sprint.tickets.flatMap((t) => t.events)
+  );
 
   const alerts: Alert[] = [];
 
