@@ -41,6 +41,17 @@ export interface Forecast {
     costPerStoryPoint: number;
     durationSecondsPerStoryPoint: number;
   };
+  developers: Array<{
+    userId: string;
+    name?: string;
+    email?: string | null;
+    tokens: number;
+    cost: number;
+    durationSeconds: number;
+    eventCount: number;
+    sessionCount: number;
+    ticketCount: number;
+  }>;
   recommendation: {
     recommendedStoryPoints?: number;
     recommendedTokenBudget?: number;
