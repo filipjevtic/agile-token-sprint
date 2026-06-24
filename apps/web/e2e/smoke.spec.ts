@@ -12,6 +12,9 @@ test.describe("smoke tests", () => {
   test("navigation links work", async ({ page }) => {
     await loginAs(page);
     await page.goto("/");
+    await page.getByRole("link", { name: "Velocity" }).click();
+    await expect(page.getByRole("heading", { name: "Velocity" })).toBeVisible();
+
     await page.getByRole("link", { name: "Forecast" }).click();
     await expect(page.getByRole("heading", { name: "Forecast & Capacity" })).toBeVisible();
 
