@@ -19,7 +19,7 @@ import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.js";
 
 function AppRoutes() {
   const { user, token, loading, setupRequired } = useAuth();
-  const { projects, loading: projectsLoading, createProject, seedDemo } = useProjects();
+  const { projects, loading: projectsLoading, createProject } = useProjects();
   const [projectId, setProjectId] = useState<string>("");
   const [alertRefresh, setAlertRefresh] = useState(0);
 
@@ -69,10 +69,6 @@ function AppRoutes() {
           onCreate={async (name) => {
             const p = await createProject(name);
             setProjectId(p.id);
-          }}
-          onLoadDemo={async () => {
-            const { projectId: id } = await seedDemo();
-            setProjectId(id);
           }}
         />
       </AppLayout>

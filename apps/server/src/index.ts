@@ -12,7 +12,6 @@ import { registerAlertRoutes } from "./routes/alerts.js";
 import { registerTeamRoutes } from "./routes/team.js";
 import { registerCIRoutes } from "./routes/ci.js";
 import { registerAuthRoutes } from "./routes/auth.js";
-import { registerAdminRoutes } from "./routes/admin.js";
 import { registerOAuthRoutes } from "./routes/oauth.js";
 import { registerInviteRoutes } from "./routes/invites.js";
 
@@ -33,7 +32,6 @@ await app.register(registerAlertRoutes, { prefix: "/api/v1/alerts" });
 await app.register(registerTeamRoutes, { prefix: "/api/v1/team" });
 await app.register(registerCIRoutes, { prefix: "/api/v1/ci" });
 await app.register(registerAuthRoutes, { prefix: "/api/v1/auth" });
-await app.register(registerAdminRoutes, { prefix: "/api/v1/admin" });
 await app.register(registerOAuthRoutes, { prefix: "/api/v1/auth/oauth" });
 await app.register(registerInviteRoutes, { prefix: "/api/v1/invites" });
 

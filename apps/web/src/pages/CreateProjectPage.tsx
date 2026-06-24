@@ -4,20 +4,18 @@ import { Input } from "../components/ui/input.js";
 import { Label } from "../components/ui/label.js";
 import { Button } from "../components/ui/button.js";
 import { Alert, AlertDescription } from "../components/ui/alert.js";
-import { AlertCircle, FolderKanban, Sparkles } from "lucide-react";
+import { AlertCircle, FolderKanban } from "lucide-react";
 import { useAuth } from "../context/auth.js";
 
 interface CreateProjectPageProps {
   onCreate: (name: string) => Promise<void>;
-  onLoadDemo: () => Promise<void>;
 }
 
-export function CreateProjectPage({ onCreate, onLoadDemo }: CreateProjectPageProps) {
+export function CreateProjectPage({ onCreate }: CreateProjectPageProps) {
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [loadingDemo, setLoadingDemo] = useState(false);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,18 +28,6 @@ export function CreateProjectPage({ onCreate, onLoadDemo }: CreateProjectPagePro
       setError(err instanceof Error ? err.message : "Failed to create project");
     } finally {
       setCreating(false);
-    }
-  };
-
-  const handleDemo = async () => {
-    setError(null);
-    setLoadingDemo(true);
-    try {
-      await onLoadDemo();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load demo data");
-    } finally {
-      setLoadingDemo(false);
     }
   };
 
@@ -87,25 +73,6 @@ export function CreateProjectPage({ onCreate, onLoadDemo }: CreateProjectPagePro
             </form>
           </CardContent>
         </Card>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">or</span>
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleDemo}
-          disabled={loadingDemo}
-        >
-          <Sparkles className="mr-2 h-4 w-4" />
-          {loadingDemo ? "Loading demo data..." : "Explore with demo data"}
-        </Button>
       </div>
     </div>
   );
