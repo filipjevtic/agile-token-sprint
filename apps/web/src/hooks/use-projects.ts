@@ -52,19 +52,5 @@ export function useProjects() {
     return project;
   }, [token]);
 
-  const seedDemo = useCallback(async (): Promise<{ projectId: string; projectSlug: string }> => {
-    const res = await fetch(`${API_URL}/api/v1/admin/seed-demo`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to load demo data");
-    }
-    const data = await res.json();
-    await fetchProjects();
-    return data;
-  }, [token, fetchProjects]);
-
-  return { projects, loading, error, createProject, seedDemo, refetch: fetchProjects };
+  return { projects, loading, error, createProject, refetch: fetchProjects };
 }

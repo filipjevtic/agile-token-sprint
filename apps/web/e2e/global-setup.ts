@@ -52,8 +52,16 @@ export default async function globalSetup() {
     token = body.token;
   }
 
-  // Seed demo data so tests have a project + sprint to work with.
-  await ctx.post(`${API_URL}/api/v1/admin/seed-demo`, {
+  // Ensure at least one real project exists so the app renders the dashboard
+  // shell (rather than the create-project empty state) for the tests.
+  const projectsRes = await ctx.get(`${API_URL}/api/v1/projects`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  const { projects } = await projectsRes.json();
+  if (!projects || projects.length === 0) {
+    await ctx.post(`${API_URL}/api/v1/projects`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name: "E2E Project" },
+    });
+  }
 }
