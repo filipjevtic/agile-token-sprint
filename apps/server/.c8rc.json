@@ -8,7 +8,8 @@
     "dist/services/rollup.js",
     "dist/services/trends.js",
     "dist/services/velocity.js",
-    "dist/lib/crypto.js"
+    "dist/lib/crypto.js",
+    "dist/lib/pagination.js"
   ],
   "exclude": ["**/*.test.js"],
   "reporter": ["text", "text-summary", "lcov"],
