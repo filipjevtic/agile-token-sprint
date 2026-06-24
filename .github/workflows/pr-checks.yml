@@ -44,6 +44,17 @@ jobs:
       - name: Unit tests
         run: npm run test --workspaces --if-present
 
+      - name: Coverage gate (server analytics core)
+        run: npm run test:coverage --workspace=apps/server
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: server-coverage
+          path: apps/server/coverage/
+          retention-days: 7
+
       - name: Start PostgreSQL
         run: docker compose up -d postgres
 

@@ -6,6 +6,9 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub](https://img.shields.io/badge/GitHub-filipjevtic%2Fburnwise-blue?logo=github)](https://github.com/filipjevtic/burnwise)
+[![PR Checks](https://github.com/filipjevtic/burnwise/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/filipjevtic/burnwise/actions/workflows/pr-checks.yml)
+[![CodeQL](https://github.com/filipjevtic/burnwise/actions/workflows/codeql.yml/badge.svg)](https://github.com/filipjevtic/burnwise/actions/workflows/codeql.yml)
+[![Security](https://github.com/filipjevtic/burnwise/actions/workflows/security.yml/badge.svg)](https://github.com/filipjevtic/burnwise/actions/workflows/security.yml)
 
 **The agile observability layer for AI-assisted engineering.** AI coding agents make individual developers faster, but sprint planning is still a guessing game built on pre-AI baselines. Burnwise is a self-hosted, open-source platform that ties LLM tokens, traces, CI cost, and coding time to your Jira / GitHub / GitLab tickets — so you can calibrate story points against *actual* AI-assisted effort and plan sprints with confidence instead of guesswork.
 
