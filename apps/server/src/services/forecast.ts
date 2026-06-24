@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { rollupEvents, aggregateByDeveloper, type DeveloperRollup } from "./rollup.js";
 
 export interface HistoricalStats {
   completedTickets: number;
@@ -14,6 +15,9 @@ export interface HistoricalStats {
 interface PrismaEvent {
   eventType: string;
   payload: Record<string, unknown>;
+  userId?: string;
+  sessionId?: string | null;
+  ticketId?: string | null;
 }
 
 interface TicketWithEvents {
@@ -28,9 +32,15 @@ export interface ForecastInput {
   targetDurationSeconds?: number;
 }
 
+export interface DeveloperCapacity extends DeveloperRollup {
+  name?: string;
+  email?: string | null;
+}
+
 export interface ForecastResult {
   projectId: string;
   historical: HistoricalStats;
+  developers: DeveloperCapacity[];
   recommendation: {
     recommendedStoryPoints?: number;
     recommendedTokenBudget?: number;
@@ -65,7 +75,9 @@ export async function generateForecast(
     throw new Error("Project not found");
   }
 
-  const historical = computeHistoricalStats(project.tickets as unknown as TicketWithEvents[]);
+  const tickets = project.tickets as unknown as TicketWithEvents[];
+  const historical = computeHistoricalStats(tickets);
+  const developers = computeDeveloperCapacity(tickets);
 
   const recommendation = buildRecommendation(historical, input);
 
@@ -78,9 +90,30 @@ export async function generateForecast(
   return {
     projectId,
     historical,
+    developers,
     recommendation,
     budget,
   };
+}
+
+/**
+ * Per-developer capacity over completed tickets: who has been doing how much
+ * AI-assisted work, so planners can reason about realistic team throughput.
+ */
+export function computeDeveloperCapacity(tickets: TicketWithEvents[]): DeveloperCapacity[] {
+  const completed = tickets.filter((t) => t.storyPoints && t.storyPoints > 0);
+  const events = completed.flatMap((t) =>
+    t.events
+      .filter((e) => e.userId)
+      .map((e) => ({
+        eventType: e.eventType,
+        payload: e.payload,
+        userId: e.userId as string,
+        sessionId: e.sessionId ?? null,
+        ticketId: e.ticketId ?? null,
+      }))
+  );
+  return aggregateByDeveloper(events);
 }
 
 function computeHistoricalStats(
@@ -89,23 +122,8 @@ function computeHistoricalStats(
   const completedTickets = tickets.filter((t) => t.storyPoints && t.storyPoints > 0);
   const totalStoryPoints = completedTickets.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
 
-  let totalTokens = 0;
-  let totalCost = 0;
-  let totalDurationSeconds = 0;
-
-  for (const ticket of completedTickets) {
-    for (const event of ticket.events) {
-      const payload = event.payload as Record<string, unknown>;
-      if (event.eventType === "llm.response") {
-        totalTokens += (payload.totalTokens as number) || 0;
-        totalCost += (payload.costUsd as number) || 0;
-      } else if (event.eventType === "session.activity") {
-        totalDurationSeconds += (payload.durationSeconds as number) || 0;
-      } else if (event.eventType === "ci.run") {
-        totalCost += (payload.costUsd as number) || 0;
-      }
-    }
-  }
+  const rollup = rollupEvents(completedTickets.flatMap((t) => t.events));
+  const { tokens: totalTokens, cost: totalCost, durationSeconds: totalDurationSeconds } = rollup;
 
   return {
     completedTickets: completedTickets.length,

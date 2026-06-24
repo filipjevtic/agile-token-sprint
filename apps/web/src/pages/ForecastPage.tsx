@@ -5,7 +5,7 @@ import { Badge } from "../components/ui/badge.js";
 import { Skeleton } from "../components/ui/skeleton.js";
 import { Forecast } from "../hooks/use-project-data.js";
 import { useCISummary } from "../hooks/use-ci-summary.js";
-import { TrendingUp, Wallet, Timer, Target, Activity, Cpu } from "lucide-react";
+import { TrendingUp, Wallet, Timer, Target, Activity, Cpu, Users } from "lucide-react";
 
 export function ForecastPage({
   projectId,
@@ -55,6 +55,43 @@ export function ForecastPage({
               </div>
             </CardContent>
           </Card>
+
+          {forecast.developers.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-muted-foreground" />
+                  Team capacity (completed work)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="py-2 font-medium">Developer</th>
+                        <th className="py-2 text-right font-medium">Tokens</th>
+                        <th className="py-2 text-right font-medium">Cost</th>
+                        <th className="py-2 text-right font-medium">Time (h)</th>
+                        <th className="py-2 text-right font-medium">Tickets</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {forecast.developers.map((d) => (
+                        <tr key={d.userId} className="border-b last:border-0">
+                          <td className="py-2 font-medium">{d.name || d.userId}</td>
+                          <td className="py-2 text-right">{d.tokens.toLocaleString()}</td>
+                          <td className="py-2 text-right">${d.cost.toFixed(4)}</td>
+                          <td className="py-2 text-right">{(d.durationSeconds / 3600).toFixed(2)}</td>
+                          <td className="py-2 text-right">{d.ticketCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

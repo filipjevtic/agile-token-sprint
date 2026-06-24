@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { buildRecommendation } from "./forecast.js";
+import { buildRecommendation, computeDeveloperCapacity } from "./forecast.js";
 
 function makeHistorical(overrides: Partial<Parameters<typeof buildRecommendation>[0]> = {}) {
   return {
@@ -36,5 +36,40 @@ describe("buildRecommendation", () => {
     const historical = makeHistorical({ completedTickets: 2 });
     const recommendation = buildRecommendation(historical, {});
     assert.strictEqual(recommendation.confidence, "low");
+  });
+});
+
+describe("computeDeveloperCapacity", () => {
+  it("aggregates only completed tickets' events per developer", () => {
+    const result = computeDeveloperCapacity([
+      {
+        storyPoints: 3,
+        events: [
+          { eventType: "llm.response", payload: { totalTokens: 100 }, userId: "a", ticketId: "t1" },
+          { eventType: "session.activity", payload: { durationSeconds: 60 }, userId: "b", ticketId: "t1" },
+        ],
+      },
+      {
+        // Not completed (no story points) -> excluded.
+        storyPoints: null,
+        events: [{ eventType: "llm.response", payload: { totalTokens: 999 }, userId: "a", ticketId: "t2" }],
+      },
+    ]);
+
+    const a = result.find((d) => d.userId === "a")!;
+    assert.strictEqual(a.tokens, 100);
+    assert.strictEqual(a.ticketCount, 1);
+    const b = result.find((d) => d.userId === "b")!;
+    assert.strictEqual(b.durationSeconds, 60);
+  });
+
+  it("ignores events without a userId", () => {
+    const result = computeDeveloperCapacity([
+      {
+        storyPoints: 2,
+        events: [{ eventType: "llm.response", payload: { totalTokens: 10 } }],
+      },
+    ]);
+    assert.strictEqual(result.length, 0);
   });
 });
