@@ -5,7 +5,8 @@ import { Badge } from "../components/ui/badge.js";
 import { Skeleton } from "../components/ui/skeleton.js";
 import { Forecast } from "../hooks/use-project-data.js";
 import { useCISummary } from "../hooks/use-ci-summary.js";
-import { TrendingUp, Wallet, Timer, Target, Activity, Cpu, Users } from "lucide-react";
+import { useVelocity } from "../hooks/use-velocity.js";
+import { TrendingUp, Wallet, Timer, Target, Activity, Cpu, Users, Gauge } from "lucide-react";
 
 export function ForecastPage({
   projectId,
@@ -21,6 +22,8 @@ export function ForecastPage({
   loading: boolean;
 }) {
   const { summary: ciSummary, loading: ciLoading } = useCISummary(projectId);
+  const { data: velocity, loading: velocityLoading } = useVelocity(projectId, 3);
+  const capacity = velocity.capacity;
 
   return (
     <div className="space-y-6">
@@ -92,6 +95,40 @@ export function ForecastPage({
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-muted-foreground" />
+                Velocity-based capacity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {velocityLoading ? (
+                <Skeleton className="h-24" />
+              ) : capacity.sampleSize === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  No completed sprints yet. Capacity is recommended from completed story points across past sprints.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <StatCard label="Recommended points" value={capacity.recommendedPoints} icon={Target} />
+                    <StatCard label="Planning range" value={`${capacity.low}–${capacity.high}`} icon={TrendingUp} />
+                    <StatCard label="Avg / median" value={`${capacity.mean} / ${capacity.median}`} icon={Activity} />
+                    <StatCard
+                      label="Confidence"
+                      value={<Badge variant={confidenceVariant(capacity.confidence)}>{capacity.confidence}</Badge>}
+                      icon={Gauge}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Based on {capacity.sampleSize} sprint{capacity.sampleSize === 1 ? "" : "s"} of completed story points (high outliers excluded). Use the median as a realistic commit target.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { computeVelocity, isCompleted, type SprintInput } from "./velocity.js";
+import { computeVelocity, isCompleted, recommendCapacity, type SprintInput } from "./velocity.js";
 
 function sprint(id: string, tickets: Array<[string, number | null]>, status = "closed"): SprintInput {
   return {
@@ -90,5 +90,52 @@ describe("computeVelocity", () => {
     assert.strictEqual(summary.averageCompletedPoints, 0);
     assert.strictEqual(summary.averageCompletionRate, 0);
     assert.strictEqual(summary.latestRollingAveragePoints, 0);
+    assert.strictEqual(summary.capacity.recommendedPoints, 0);
+    assert.strictEqual(summary.capacity.sampleSize, 0);
+  });
+
+  it("includes a capacity recommendation in the summary", () => {
+    const summary = computeVelocity([
+      sprint("1", [["done", 8]]),
+      sprint("2", [["done", 10]]),
+      sprint("3", [["done", 12]]),
+    ]);
+    assert.strictEqual(summary.capacity.recommendedPoints, 10); // median of [8,10,12]
+    assert.strictEqual(summary.capacity.median, 10);
+    assert.strictEqual(summary.capacity.sampleSize, 3);
+  });
+});
+
+describe("recommendCapacity", () => {
+  it("returns an empty recommendation for no history", () => {
+    const rec = recommendCapacity([]);
+    assert.strictEqual(rec.recommendedPoints, 0);
+    assert.strictEqual(rec.sampleSize, 0);
+    assert.strictEqual(rec.confidence, "low");
+  });
+
+  it("uses the median as the recommended points", () => {
+    const rec = recommendCapacity([5, 9, 7]); // sorted [5,7,9] -> median 7
+    assert.strictEqual(rec.recommendedPoints, 7);
+    assert.strictEqual(rec.median, 7);
+  });
+
+  it("averages two middle values for an even sample", () => {
+    const rec = recommendCapacity([4, 6, 8, 10]); // median (6+8)/2 = 7
+    assert.strictEqual(rec.median, 7);
+  });
+
+  it("drops a high outlier before estimating", () => {
+    // One huge sprint among many normal ones should be excluded (z > 2).
+    const history = [10, 10, 10, 10, 10, 10, 10, 100];
+    const rec = recommendCapacity(history);
+    assert.strictEqual(rec.sampleSize, 7); // the 100 is dropped
+    assert.strictEqual(rec.recommendedPoints, 10);
+  });
+
+  it("escalates confidence with more samples", () => {
+    assert.strictEqual(recommendCapacity([5, 6]).confidence, "low");
+    assert.strictEqual(recommendCapacity([5, 6, 7, 8]).confidence, "medium");
+    assert.strictEqual(recommendCapacity([5, 6, 7, 8, 9, 10]).confidence, "high");
   });
 });

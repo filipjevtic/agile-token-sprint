@@ -17,18 +17,40 @@ export interface SprintVelocity {
   rollingAveragePoints: number;
 }
 
+export interface CapacityRecommendation {
+  recommendedPoints: number;
+  mean: number;
+  median: number;
+  low: number;
+  high: number;
+  sampleSize: number;
+  confidence: "low" | "medium" | "high";
+}
+
 export interface VelocitySummary {
   sprints: SprintVelocity[];
   averageCompletedPoints: number;
   averageCompletionRate: number;
   latestRollingAveragePoints: number;
+  capacity: CapacityRecommendation;
 }
+
+const EMPTY_CAPACITY: CapacityRecommendation = {
+  recommendedPoints: 0,
+  mean: 0,
+  median: 0,
+  low: 0,
+  high: 0,
+  sampleSize: 0,
+  confidence: "low",
+};
 
 const EMPTY: VelocitySummary = {
   sprints: [],
   averageCompletedPoints: 0,
   averageCompletionRate: 0,
   latestRollingAveragePoints: 0,
+  capacity: EMPTY_CAPACITY,
 };
 
 export function useVelocity(projectId: string, window = 3) {
