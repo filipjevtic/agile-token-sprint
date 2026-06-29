@@ -55,8 +55,13 @@ npm install
 # Start Postgres
 docker compose up -d postgres
 
-# Apply database migrations
-npm run db:migrate:deploy --workspace=apps/server
+# Build shared packages (server and proxy depend on these)
+npm run build --workspace=packages/schema --workspace=packages/pricing
+
+# Apply database migrations (server config defaults cover everything
+# else, but Prisma CLI needs DATABASE_URL set explicitly)
+DATABASE_URL=postgresql://ats:ats@localhost:5432/ats \
+  npm run db:migrate --workspace=apps/server
 
 # Start the server, proxy, and web dashboard in separate terminals
 npm run dev --workspace=apps/server
@@ -158,6 +163,7 @@ For detailed diagrams and data model, see [docs/ARCHITECTURE.md](docs/ARCHITECTU
 | `apps/vscode` | VS Code extension collector |
 | `apps/mcp` | MCP server for Claude Code and other MCP clients |
 | `packages/schema` | Zod event schemas shared across apps |
+| `packages/pricing` | LLM pricing table shared by server and proxy |
 | `docs/` | Architecture, self-hosting, user stories, and integration docs |
 | `docker-compose.yml` | One-command local stack |
 

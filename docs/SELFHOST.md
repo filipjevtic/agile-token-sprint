@@ -145,7 +145,10 @@ Back up the PostgreSQL database regularly. The `Event` table will grow over time
 git pull
 docker compose build --no-cache
 docker compose up -d
-npm run db:migrate --workspace=apps/server
+
+# If running outside Docker, apply any new migrations:
+DATABASE_URL=postgresql://user:pass@localhost:5432/ats \
+  npm run db:migrate:deploy --workspace=apps/server
 ```
 
 ## Troubleshooting
