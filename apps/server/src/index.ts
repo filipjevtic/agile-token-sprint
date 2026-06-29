@@ -38,7 +38,7 @@ app.addContentTypeParser(
   }
 );
 
-await app.register(cors, { origin: true });
+await app.register(cors, { origin: true, methods: ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"] });
 
 // Global per-IP rate limit. Routes can tighten/loosen this via their
 // `config.rateLimit` option (see auth and events). Health checks are exempt so
@@ -70,7 +70,7 @@ await app.register(registerSessionRoutes, { prefix: "/api/v1/sessions" });
 await app.register(registerAnalyticsRoutes, { prefix: "/api/v1/analytics" });
 
 try {
-  await app.listen({ port: config.port, host: "0.0.0.0" });
+  await app.listen({ port: config.port, host: "::" });
 } catch (err) {
   app.log.error(err);
   process.exit(1);

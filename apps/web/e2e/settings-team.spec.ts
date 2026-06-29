@@ -12,10 +12,23 @@ test.describe.serial("team management", () => {
     await expect(page.getByText("teammate@test.com")).toBeVisible({ timeout: 5000 });
   });
 
-  test("member persists after page reload", async ({ page }) => {
+  test("change member role", async ({ page }) => {
     await loginAs(page);
     await page.goto("/settings");
     await page.getByRole("button", { name: "Team" }).click();
-    await expect(page.getByText("teammate@test.com")).toBeVisible();
+    const memberRow = page.locator("li").filter({ hasText: "teammate@test.com" });
+    await expect(memberRow).toBeVisible();
+    await memberRow.getByLabel("Member role").selectOption("viewer");
+    await expect(memberRow.getByLabel("Member role")).toHaveValue("viewer");
+  });
+
+  test("remove team member", async ({ page }) => {
+    await loginAs(page);
+    await page.goto("/settings");
+    await page.getByRole("button", { name: "Team" }).click();
+    const memberRow = page.locator("li").filter({ hasText: "teammate@test.com" });
+    await expect(memberRow).toBeVisible();
+    await memberRow.getByRole("button", { name: "Remove" }).click();
+    await expect(page.getByText("teammate@test.com")).not.toBeVisible({ timeout: 5000 });
   });
 });
