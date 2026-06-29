@@ -16,6 +16,18 @@ export async function registerAuthRoutes(
 ) {
   const prisma = await getPrisma();
 
+  app.get("/providers", async (_request: FastifyRequest, reply: FastifyReply) => {
+    return reply.send({
+      github: !!config.oauth.github.clientId,
+      google: !!config.oauth.google.clientId,
+      gitlab: !!config.oauth.gitlab.clientId,
+      oidc: {
+        enabled: !!(config.oidc.issuerUrl && config.oidc.clientId),
+        name: config.oidc.displayName,
+      },
+    });
+  });
+
   app.get("/setup-required", async (_request: FastifyRequest, reply: FastifyReply) => {
     const workspace = await prisma.workspace.findFirst();
     if (!workspace || !workspace.setupComplete) {

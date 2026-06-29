@@ -7,9 +7,11 @@ import { Button } from "../components/ui/button.js";
 import { Alert, AlertDescription } from "../components/ui/alert.js";
 import { AlertCircle } from "lucide-react";
 import { SSOButtons } from "../components/auth/SSOButtons.js";
+import { useAuthProviders } from "../hooks/use-auth-providers.js";
 
 export function LoginPage() {
   const { login } = useAuth();
+  const providers = useAuthProviders();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export function LoginPage() {
               </Button>
             </form>
             <div className="mt-4">
-              <SSOButtons />
+              <SSOButtons providers={providers} />
             </div>
           </CardContent>
         </Card>

@@ -8,6 +8,7 @@ import { Button } from "../components/ui/button.js";
 import { Alert, AlertDescription } from "../components/ui/alert.js";
 import { AlertCircle } from "lucide-react";
 import { SSOButtons } from "../components/auth/SSOButtons.js";
+import { useAuthProviders } from "../hooks/use-auth-providers.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -34,6 +35,7 @@ export function InvitePage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const providers = useAuthProviders();
 
   useEffect(() => {
     if (!token) return;
@@ -160,7 +162,7 @@ export function InvitePage() {
               </Button>
             </form>
             <div className="mt-4">
-              <SSOButtons label="Or join with" />
+              <SSOButtons label="Or join with" providers={providers} />
             </div>
           </CardContent>
         </Card>

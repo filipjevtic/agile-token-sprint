@@ -61,8 +61,70 @@ function getProviderConfig(provider: string): OAuthProviderConfig | null {
           };
         },
       };
+    case "gitlab": {
+      const base = config.oauth.gitlab.baseUrl.replace(/\/$/, "");
+      return {
+        authUrl: `${base}/oauth/authorize`,
+        tokenUrl: `${base}/oauth/token`,
+        userUrl: `${base}/api/v4/user`,
+        scope: "read_user",
+        clientId: config.oauth.gitlab.clientId,
+        clientSecret: config.oauth.gitlab.clientSecret,
+        extractUser(profile) {
+          return {
+            id: String(profile.id),
+            email: String(profile.email || ""),
+            displayName: String(profile.name || profile.username || ""),
+          };
+        },
+      };
+    }
+    case "oidc": {
+      if (!oidcEndpoints) return null;
+      return {
+        authUrl: oidcEndpoints.authorization_endpoint,
+        tokenUrl: oidcEndpoints.token_endpoint,
+        userUrl: oidcEndpoints.userinfo_endpoint,
+        scope: config.oidc.scope,
+        clientId: config.oidc.clientId,
+        clientSecret: config.oidc.clientSecret,
+        extractUser(profile) {
+          return {
+            id: String(profile.sub || profile.id || ""),
+            email: String(profile.email || ""),
+            displayName: String(profile.name || profile.preferred_username || profile.email || ""),
+          };
+        },
+      };
+    }
     default:
       return null;
+  }
+}
+
+interface OIDCDiscovery {
+  authorization_endpoint: string;
+  token_endpoint: string;
+  userinfo_endpoint: string;
+}
+
+let oidcEndpoints: OIDCDiscovery | null = null;
+
+async function loadOIDCDiscovery(): Promise<void> {
+  if (!config.oidc.issuerUrl || !config.oidc.clientId) return;
+  const issuer = config.oidc.issuerUrl.replace(/\/$/, "");
+  try {
+    const res = await fetch(`${issuer}/.well-known/openid-configuration`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const doc = await res.json() as Record<string, unknown>;
+    oidcEndpoints = {
+      authorization_endpoint: String(doc.authorization_endpoint),
+      token_endpoint: String(doc.token_endpoint),
+      userinfo_endpoint: String(doc.userinfo_endpoint),
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`Failed to fetch OIDC discovery from ${issuer}: ${msg}`);
   }
 }
 
@@ -71,6 +133,7 @@ export async function registerOAuthRoutes(
   _opts: FastifyPluginOptions
 ) {
   const prisma = await getPrisma();
+  await loadOIDCDiscovery();
 
   app.get<{ Params: { provider: string } }>(
     "/:provider",

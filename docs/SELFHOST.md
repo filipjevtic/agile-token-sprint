@@ -41,7 +41,7 @@ npm run start --workspace=apps/server
 
 ## SSO / OAuth
 
-Burnwise supports GitHub and Google OAuth out of the box. Both are optional — email/password always works.
+Burnwise supports GitHub, Google, and GitLab OAuth plus generic OIDC out of the box. All are optional — email/password always works. SSO buttons appear on the login page only when a provider is configured.
 
 ### GitHub OAuth
 
@@ -65,9 +65,38 @@ Burnwise supports GitHub and Google OAuth out of the box. Both are optional — 
    APP_URL=https://your-domain
    ```
 
+### GitLab OAuth
+
+1. Go to **GitLab → User Settings → Applications** (or the admin area for self-hosted GitLab).
+2. Set **Redirect URI** to `https://your-domain/api/v1/auth/oauth/gitlab/callback`.
+3. Select the **read_user** scope.
+4. Copy the **Application ID** and **Secret** into your `.env`:
+   ```
+   GITLAB_CLIENT_ID=...
+   GITLAB_CLIENT_SECRET=...
+   # For self-hosted GitLab:
+   # GITLAB_BASE_URL=https://gitlab.example.com
+   ```
+
+### Generic OIDC
+
+Connect any OIDC-compliant identity provider (Keycloak, Authentik, Okta, Azure AD / Entra ID, etc.):
+
+1. Create a client/application in your IdP with the redirect URI `https://your-domain/api/v1/auth/oauth/oidc/callback`.
+2. Set the required environment variables:
+   ```
+   OIDC_ISSUER_URL=https://keycloak.example.com/realms/burnwise
+   OIDC_CLIENT_ID=burnwise
+   OIDC_CLIENT_SECRET=...
+   OIDC_DISPLAY_NAME=Keycloak          # label shown on the login button
+   OIDC_SCOPE=openid email profile     # default; adjust if your IdP requires different scopes
+   ```
+
+The server fetches the OIDC discovery document (`/.well-known/openid-configuration`) from the issuer URL at startup to resolve authorization, token, and userinfo endpoints automatically.
+
 SSO users are automatically created on first sign-in with the `member` role. Promote them to admin via **Settings → Team** after they sign in.
 
-You can mix providers: for example, let developers sign in with **GitHub** while admins use **Google** — both are enabled independently and email/password remains available as a fallback.
+You can mix providers: for example, let developers sign in with **GitLab** while admins use **Google** and the security team uses **Keycloak via OIDC** — all are enabled independently and email/password remains available as a fallback.
 
 ## API keys for collectors
 

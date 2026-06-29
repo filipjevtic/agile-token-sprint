@@ -43,5 +43,17 @@ export const config = {
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
+    gitlab: {
+      clientId: process.env.GITLAB_CLIENT_ID || "",
+      clientSecret: process.env.GITLAB_CLIENT_SECRET || "",
+      baseUrl: process.env.GITLAB_BASE_URL || "https://gitlab.com",
+    },
+  },
+  oidc: {
+    issuerUrl: process.env.OIDC_ISSUER_URL || "",
+    clientId: process.env.OIDC_CLIENT_ID || "",
+    clientSecret: process.env.OIDC_CLIENT_SECRET || "",
+    displayName: process.env.OIDC_DISPLAY_NAME || "SSO",
+    scope: process.env.OIDC_SCOPE || "openid email profile",
   },
 };
