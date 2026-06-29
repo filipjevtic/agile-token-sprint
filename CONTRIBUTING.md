@@ -7,13 +7,14 @@ Thank you for your interest in contributing! This document outlines how to get s
 1. **Prerequisites**: Node.js 20+, Docker, and Docker Compose.
 2. **Install dependencies**:
    ```bash
-   npm install --workspaces --include-workspace-root
+   npm install
    ```
-3. **Start the local stack**:
+3. **Start Postgres and set up the database**:
    ```bash
-   docker compose up -d
-   npm run db:migrate --workspace=apps/server
-   npm run db:seed --workspace=apps/server
+   docker compose up -d postgres
+   npm run build --workspace=packages/schema --workspace=packages/pricing
+   DATABASE_URL=postgresql://ats:ats@localhost:5432/ats \
+     npm run db:migrate --workspace=apps/server
    ```
 4. **Run the apps**:
    ```bash
