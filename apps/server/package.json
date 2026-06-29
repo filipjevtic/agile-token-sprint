@@ -19,7 +19,7 @@
     "@burnwise/schema": "*",
     "@fastify/cors": "^11.0.0",
     "@fastify/rate-limit": "^10.0.0",
-    "@prisma/client": "^5.15.0",
+    "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
     "fastify": "^5.8.0",
     "jsonwebtoken": "^9.0.3",
