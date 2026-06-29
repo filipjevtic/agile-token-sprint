@@ -24,6 +24,7 @@
 - [x] **Sync issue trackers** — GitHub Issues, Jira, and GitLab Issues become sprints and tickets.
 - [x] **Track budgets and alerts** for tokens, cost, and CI spend per project and sprint.
 - [x] **Manage teams and roles** with personal API keys, workspace scoping, and encrypted secrets.
+- [x] **SSO with GitHub, Google, GitLab, and any OIDC provider** — or use email/password. Buttons appear only when configured.
 - [x] **First-run setup wizard** — no seed data; create your workspace and admin account on first visit.
 - [x] **Self-host in one command** with Docker Compose.
 
