@@ -72,6 +72,9 @@ export function useTeam(projectId: string): UseTeamResult {
       body: JSON.stringify({ role }),
     });
     if (!res.ok) throw new Error(await res.text());
+    setMembers((prev) =>
+      prev.map((m) => (m.userId === userId ? { ...m, role } : m))
+    );
     setRefreshKey((n) => n + 1);
   }
 
@@ -81,6 +84,7 @@ export function useTeam(projectId: string): UseTeamResult {
       headers: authHeaders,
     });
     if (!res.ok) throw new Error(await res.text());
+    setMembers((prev) => prev.filter((m) => m.userId !== userId));
     setRefreshKey((n) => n + 1);
   }
 

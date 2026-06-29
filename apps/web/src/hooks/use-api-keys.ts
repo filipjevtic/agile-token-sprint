@@ -84,6 +84,9 @@ export function useApiKeys(): UseApiKeysResult {
       headers: authHeaders,
     });
     if (!res.ok) throw new Error(await res.text());
+    setKeys((prev) =>
+      prev.map((k) => (k.id === id ? { ...k, isActive: false, revokedAt: new Date().toISOString() } : k))
+    );
     setRefreshKey((n) => n + 1);
   }
 
