@@ -123,6 +123,12 @@ task, then call `report_usage` with token counts to track AI cost. If routing
 model calls through the proxy, token capture is automatic and `report_usage`
 is not needed.
 
+> **Attribution accuracy:** `report_usage` attributes all reported tokens to the
+> current ticket. If you work on multiple tickets in one session, call
+> `set_ticket` and `report_usage` for each task separately — otherwise all
+> tokens are attributed to the last ticket. Per-task incremental reporting is
+> planned (#149).
+
 ## VS Code extension (`apps/vscode`)
 
 Install the extension and set the active ticket via the command palette
