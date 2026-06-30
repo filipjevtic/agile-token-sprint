@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && cp -r src/generated dist/",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "db:migrate": "prisma migrate dev",
@@ -12,7 +12,7 @@
     "db:generate": "prisma generate",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/services/*.test.ts src/lib/*.test.ts",
-    "test:coverage": "c8 npm test"
+    "test:coverage": "c8 node --import tsx --test dist/services/*.test.js dist/lib/*.test.js"
   },
   "dependencies": {
     "@burnwise/pricing": "*",
