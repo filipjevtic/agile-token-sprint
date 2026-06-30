@@ -28,14 +28,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/schema/dist ./packages/schema/dist
-COPY --from=builder /app/packages/schema/package.json ./packages/schema/
-COPY --from=builder /app/packages/pricing/dist ./packages/pricing/dist
-COPY --from=builder /app/packages/pricing/package.json ./packages/pricing/
-COPY --from=builder /app/apps/server/src ./apps/server/src
+COPY --from=builder /app/apps/server/dist/index.mjs ./apps/server/dist/index.mjs
+COPY --from=builder /app/apps/server/dist/index.mjs.map ./apps/server/dist/index.mjs.map
 COPY --from=builder /app/apps/server/package.json ./apps/server/
-COPY --from=builder /app/apps/server/tsconfig.json ./apps/server/
 COPY --from=builder /app/apps/server/prisma ./apps/server/prisma
 COPY --from=builder /app/apps/server/prisma.config.ts ./apps/server/
 
@@ -49,4 +44,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD ["node", "-e", "fetch('http://localhost:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
 
-CMD ["npx", "tsx", "src/index.ts"]
+CMD ["node", "dist/index.mjs"]
