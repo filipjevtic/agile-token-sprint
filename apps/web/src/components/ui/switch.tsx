@@ -1,8 +1,8 @@
 import * as React from "react";
 import { cn } from "../../lib/utils.js";
 
-const Switch = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, ...props }, ref) => (
+function Switch({ className, ref, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { ref?: React.Ref<HTMLInputElement> }) {
+  return (
     <input
       type="checkbox"
       role="switch"
@@ -13,8 +13,7 @@ const Switch = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
       )}
       {...props}
     />
-  )
-);
-Switch.displayName = "Switch";
+  );
+}
 
 export { Switch };
