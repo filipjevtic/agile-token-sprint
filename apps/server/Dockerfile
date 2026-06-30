@@ -1,4 +1,4 @@
-FROM node:20-alpine3.20 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ RUN find /app/packages -name "*.tsbuildinfo" -delete \
 RUN npm run db:generate --workspace=apps/server
 RUN npm run build --workspace=apps/server
 
-FROM node:20-alpine3.20 AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

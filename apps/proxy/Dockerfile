@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ RUN find /app/packages -name "*.tsbuildinfo" -delete \
   && find /app/packages -name "*.test.*" -delete
 RUN npm run build --workspace=apps/proxy
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
