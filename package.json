@@ -22,7 +22,7 @@
     "typescript-eslint": "^8.2.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "allowScripts": {
     "@prisma/client@5.22.0": true,
