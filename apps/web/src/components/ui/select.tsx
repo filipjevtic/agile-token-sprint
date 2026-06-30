@@ -1,8 +1,8 @@
 import * as React from "react";
 import { cn } from "../../lib/utils.js";
 
-const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
-  ({ className, ...props }, ref) => (
+function Select({ className, ref, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { ref?: React.Ref<HTMLSelectElement> }) {
+  return (
     <select
       ref={ref}
       className={cn(
@@ -11,8 +11,7 @@ const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HT
       )}
       {...props}
     />
-  )
-);
-Select.displayName = "Select";
+  );
+}
 
 export { Select };
