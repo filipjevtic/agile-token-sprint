@@ -4,7 +4,7 @@ import { defineConfig } from "prisma/config";
 export default defineConfig({
   earlyAccess: true,
   schema: path.join(import.meta.dirname, "prisma", "schema.prisma"),
-  migrate: {
+  datasource: {
     url: process.env.DATABASE_URL ?? "postgresql://ats:ats@localhost:5432/ats",
   },
 });
